@@ -1,25 +1,135 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from 'react-hot-toast';
+import { 
+  Search, Filter, BookOpen, Clock, BarChart, 
+  Sparkles, GraduationCap, ChevronRight, CheckCircle2 
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-// import TechBackground from "../TechBackground";
-import { getCoursesData, getCourseIcon, getCourseDetailsData } from "../utils/dataAdapter";
-import type { Course } from "../types";
 import MicrosoftBadge from "../components/MicrosoftBadge";
 import Stats from "../components/Stats";
-import useRevealOnScroll from "../hooks/useRevealOnScroll";
+import { getCoursesData, getCourseIcon, getCourseDetailsData } from "../utils/dataAdapter";
+import type { Course } from "../types";
 import { usePaymentModal } from "../contexts/PaymentModalContext";
 import { useContactModal } from "../contexts/ContactModalContext";
+
+// --- Utility ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+// --- Sub-Component: Course Card ---
+const CourseCard = ({ course, iconPath, onApply }: { course: Course, iconPath: string, onApply: () => void }) => {
+  return (
+    <motion.article 
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      className="group relative flex flex-col h-full bg-zinc-900/40 border border-zinc-800 rounded-3xl overflow-hidden backdrop-blur-sm hover:border-zinc-700 hover:bg-zinc-900/60 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+    >
+      {/* Badge */}
+      <div className="absolute top-4 right-4 z-10">
+        <span className={cn(
+          "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm",
+          course.badge === 'FEATURED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+          course.badge === 'TRENDING' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+          course.badge === 'MOST POPULAR' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
+          'bg-blue-500/10 text-blue-400 border-blue-500/20'
+        )}>
+          {course.badge}
+        </span>
+      </div>
+
+      {/* Header / Icon Area */}
+      <div className="p-6 pb-0">
+        <div className={cn(
+          "w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110",
+          course.accent === 'edtech-green' ? 'bg-emerald-500/10 text-emerald-400' : 
+          course.accent === 'edtech-orange' ? 'bg-orange-500/10 text-orange-400' :
+          course.accent === 'edtech-red' ? 'bg-red-500/10 text-red-400' :
+          'bg-blue-500/10 text-blue-400'
+        )}>
+          {/* Render SVG Path */}
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d={iconPath || 'M13 10V3L4 14h7v7l9-11h-7z'}/>
+          </svg>
+        </div>
+
+        <div className="mb-2">
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            {course.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 p-6 pt-2 flex flex-col">
+        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-400 transition-all">
+          {course.title}
+        </h3>
+        
+        <p className="text-zinc-400 text-sm line-clamp-3 leading-relaxed mb-6 flex-1">
+          {course.desc}
+        </p>
+
+        {/* Meta */}
+        <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 mb-6 pb-6 border-b border-white/5">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            {course.duration}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <BarChart className="w-3.5 h-3.5" />
+            {course.extra}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <Link 
+            to={`/program/${course.id}`} 
+            className="flex-1 py-3 rounded-xl text-sm font-semibold text-center border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+          >
+            Details
+          </Link>
+          <button 
+            onClick={onApply}
+            className="flex-1 py-3 rounded-xl text-sm font-bold text-center bg-white text-black hover:bg-zinc-200 transition-colors shadow-lg shadow-white/5"
+          >
+            Apply Now
+          </button>
+        </div>
+      </div>
+      
+      {/* Hover Gradient Blob */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    </motion.article>
+  );
+}
+
+// --- Loading Skeleton ---
+const SkeletonCard = () => (
+  <div className="h-[450px] rounded-3xl bg-zinc-900/50 border border-zinc-800 animate-pulse p-6">
+    <div className="w-14 h-14 rounded-2xl bg-zinc-800 mb-4" />
+    <div className="w-20 h-4 rounded bg-zinc-800 mb-4" />
+    <div className="w-3/4 h-8 rounded bg-zinc-800 mb-4" />
+    <div className="w-full h-20 rounded bg-zinc-800 mb-6" />
+    <div className="w-full h-10 rounded-xl bg-zinc-800 mt-auto" />
+  </div>
+);
 
 export default function CoursesPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const { openModal: openPaymentModal } = usePaymentModal();
-  const { openModal } = useContactModal();
-
-  // Add scroll reveal animations
-  useRevealOnScroll();
+  const { openModal: openContactModal } = useContactModal();
 
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [courseIcons, setCourseIcons] = useState<Record<string, string>>({});
@@ -31,7 +141,6 @@ export default function CoursesPage() {
         const data = await getCoursesData();
         setAllCourses(data);
         
-        // Load icons for all courses
         const iconPromises = data.map(async (course) => {
           const icon = await getCourseIcon(course);
           return { id: course.id, icon };
@@ -51,52 +160,27 @@ export default function CoursesPage() {
         setLoading(false);
       }
     };
-
     loadCourses();
   }, []);
 
-  // Initialize scroll reveal for dynamic content after data loads
-  useEffect(() => {
-    if (!loading && allCourses.length > 0) {
-      const timer = setTimeout(() => {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
-            });
-          },
-          { threshold: 0.1 }
-        );
-        
-        const coursesRevealElements = document.querySelectorAll('.courses-page-reveal');
-        coursesRevealElements.forEach((el) => observer.observe(el));
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading, allCourses.length]);
-
   const handleApplyNow = async (course: Course) => {
-    // Get course pricing from details API
     try {
       const courseDetails = await getCourseDetailsData(course.id);
       if (!courseDetails?.pricing?.current) {
-        toast.error('Pricing information not available for this course. Please contact support.');
+        toast.error('Pricing information unavailable.');
         return;
       }
       openPaymentModal(course, courseDetails.pricing.current, 'courses-page');
     } catch (error) {
-      toast.error('Unable to load course pricing. Please contact support.');
+      toast.error('Unable to load course pricing.');
     }
   };
   
-  // Memoize categories to avoid recalculation
   const categories = useMemo(() => 
     ['ALL', ...Array.from(new Set(allCourses.map(c => c.category)))], 
     [allCourses]
   );
   
-  // Memoize filtered courses to optimize rendering
   const filteredCourses = useMemo(() => 
     allCourses.filter(course => {
       const matchesCategory = selectedCategory === 'ALL' || course.category === selectedCategory;
@@ -107,92 +191,86 @@ export default function CoursesPage() {
     [allCourses, selectedCategory, searchTerm]
   );
 
-  // Get featured courses (first 3 courses for highlights)
-  const featuredCourses = allCourses.slice(0, 3);
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-orange-500/30">
       <Navbar />
       
-      {/* Background */}
-      {/* <div className="fixed inset-0 -z-10">
-        <TechBackground className="mix-blend-screen opacity-30" />
-      </div> */}
-      
       <main className="pt-20">
-        {/* SECTION 1: Hero Section - BRAND COLORS */}
-        <section className="py-16 md:py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-edtech-blue via-bg-deep to-edtech-blue/90" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          {/* <TechBackground className="opacity-15" /> */}
-          
-          <div className="relative mx-auto max-w-7xl px-6 text-center">
-            <div className="badge-hero mx-auto w-max mb-8">
-              <span>🎓</span><span>COMPLETE PROGRAM CATALOG</span>
-            </div>
+        
+        {/* --- HERO SECTION --- */}
+        <section className="relative py-20 md:py-32 overflow-hidden">
+          {/* Backgrounds */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-            {/* Microsoft Partnership Badge */}
-            <div className="mb-8 flex justify-center">
-              <MicrosoftBadge size="lg" />
-            </div>
+          <div className="relative mx-auto max-w-7xl px-6 text-center z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-medium text-orange-400 mb-8">
+                <BookOpen className="w-3 h-3" />
+                <span>PROGRAM CATALOG</span>
+              </div>
+              
+              <div className="mb-8 flex justify-center transform hover:scale-105 transition-transform duration-300">
+                <MicrosoftBadge size="lg" />
+              </div>
 
-                          <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold mb-8 leading-tight">
-                Master <span className="text-transparent bg-clip-text bg-gradient-to-r from-edtech-green to-edtech-orange">Tomorrow's</span> Skills Today
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-8 tracking-tight leading-tight">
+                Master <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-orange-400">Tomorrow's Skills</span> Today
               </h1>
-              <p className="text-white/80 text-xl md:text-2xl max-w-4xl mx-auto mb-12 leading-relaxed">
-                ✨ Ready to level up? Explore our <span className="text-edtech-green font-semibold">elite collection</span> of industry-leading programs designed by experts 
-                to fast-track your career growth and position you among the <span className="text-edtech-orange font-semibold">top 1%</span> of tech professionals
+              
+              <p className="text-xl text-zinc-400 max-w-3xl mx-auto mb-16 leading-relaxed">
+                Explore our <span className="text-white font-medium">elite collection</span> of industry-leading programs designed to fast-track your career growth.
               </p>
 
-            {/* Course Stats Preview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-4xl mx-auto mb-12">
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-edtech-green mb-2">{allCourses.length}+</div>
-                <div className="text-white/80 text-sm font-medium">Expert Programs</div>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-16">
+                {[
+                  { value: `${allCourses.length}+`, label: "Programs", color: "text-emerald-400" },
+                  { value: `${categories.length - 1}`, label: "Specializations", color: "text-orange-400" },
+                  { value: "24/7", label: "Mentor Support", color: "text-white" },
+                  { value: "95%", label: "Success Rate", color: "text-red-400" }
+                ].map((stat, i) => (
+                  <div key={i} className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 backdrop-blur-sm">
+                    <div className={cn("text-3xl font-bold mb-1", stat.color)}>{stat.value}</div>
+                    <div className="text-xs text-zinc-500 font-bold uppercase">{stat.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-edtech-orange mb-2">{categories.length - 1}</div>
-                <div className="text-white/80 text-sm font-medium">Specializations</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-white mb-2">24/7</div>
-                <div className="text-white/80 text-sm font-medium">Support</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-3xl md:text-4xl font-bold text-edtech-red mb-2">95%</div>
-                <div className="text-white/80 text-sm font-medium">Success Rate</div>
-              </div>
-            </div>
 
-            {/* Enhanced Search and Filter */}
-            <div className="max-w-5xl mx-auto">
-              <div className="bg-white/5 backdrop-blur-lg border border-white/20 rounded-3xl p-8">
-                <h3 className="text-2xl font-bold text-white mb-6">Find Your Perfect Program</h3>
-                <div className="flex flex-col gap-6">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                      <svg className="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+              {/* --- SEARCH & FILTER BAR --- */}
+              <div className="max-w-4xl mx-auto">
+                <div className="p-2 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl backdrop-blur-md">
+                  
+                  {/* Search Input */}
+                  <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                      <Search className="w-5 h-5 text-zinc-500" />
                     </div>
                     <input
                       type="text"
-                      placeholder="Search by program name, technology, or skills..."
+                      placeholder="Search for Python, Data Science, AI..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/10 border-2 border-white/20 rounded-2xl pl-16 pr-6 py-4 text-white placeholder-white/50 focus:outline-none focus:border-edtech-green/50 focus:bg-white/15 transition-all text-lg"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-3 justify-center">
+
+                  {/* Filter Pills */}
+                  <div className="flex flex-wrap gap-2 justify-center px-2 pb-2">
                     {categories.map(category => (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                        className={cn(
+                          "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300",
                           selectedCategory === category
-                            ? 'bg-gradient-to-r from-edtech-green to-edtech-orange text-black shadow-lg'
-                            : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white border border-white/20'
-                        }`}
+                            ? "bg-white text-black shadow-lg scale-105"
+                            : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                        )}
                       >
                         {category.replace('-', ' ')}
                       </button>
@@ -200,287 +278,129 @@ export default function CoursesPage() {
                   </div>
                 </div>
               </div>
-            </div>
+
+            </motion.div>
           </div>
         </section>
 
-        {/* SECTION 2: Featured Courses Highlight - LIGHT */}
-        <section className="py-16 md:py-20 bg-gradient-to-br from-white via-gray-50 to-white">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-12 reveal">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                <span className="text-edtech-blue">Featured</span> Programs
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                🚀 Start with our <span className="text-edtech-blue font-semibold">top-rated programs</span> that have <span className="text-edtech-orange font-semibold">transformed thousands</span> of careers worldwide
-              </p>
-            </div>
+        {/* --- COURSE GRID --- */}
+        <section className="relative py-20">
+           {/* Background Gradient */}
+           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+           <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
-            <div className="grid md:grid-cols-3 gap-8 mb-12 courses-page-reveal reveal">
-              {featuredCourses.map((course) => (
-                <div key={course.id} className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:scale-[1.02]">
-                  {/* Course Badge */}
-                  <div className="absolute top-6 right-6 z-10">
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                      course.badge === 'FEATURED' ? 'bg-red-500 text-white' :
-                      course.badge === 'TRENDING' ? 'bg-edtech-green text-black' :
-                      course.badge === 'MOST POPULAR' ? 'bg-edtech-orange text-black' : 'bg-blue-500 text-white'
-                    }`}>
-                      {course.badge}
-                    </span>
-                  </div>
+           <div className="mx-auto max-w-7xl px-6">
+             
+             {/* Results Header */}
+             <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-white/5 pb-6">
+               <div>
+                 <h2 className="text-3xl font-bold text-white mb-2">
+                   {selectedCategory === 'ALL' ? 'All Programs' : selectedCategory.replace('-', ' ')}
+                 </h2>
+                 <p className="text-zinc-500">
+                   Showing {filteredCourses.length} {filteredCourses.length === 1 ? 'program' : 'programs'}
+                 </p>
+               </div>
+               
+               {/* Decorative Filter Icon */}
+               <div className="hidden md:flex items-center gap-2 text-zinc-500 text-sm">
+                 <Filter className="w-4 h-4" />
+                 <span>Filtered by relevance</span>
+               </div>
+             </div>
 
-                  {/* Course Icon */}
-                  <div className="p-8 pb-4">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${
-                      course.accent === 'edtech-green' ? 'bg-gradient-to-br from-edtech-green to-green-400' : 
-                      course.accent === 'edtech-orange' ? 'bg-gradient-to-br from-edtech-orange to-orange-400' :
-                      course.accent === 'edtech-red' ? 'bg-gradient-to-br from-red-500 to-red-400' :
-                      'bg-gradient-to-br from-edtech-orange to-orange-400'
-                    }`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
-                        <path strokeLinecap="round" strokeLinejoin="round" d={courseIcons[course.id] || 'M13 10V3L4 14h7v7l9-11h-7z'}/>
-                      </svg>
-                    </div>
+             {/* Grid */}
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[500px]">
+               <AnimatePresence mode="popLayout">
+                 {loading ? (
+                   [1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)
+                 ) : filteredCourses.length === 0 ? (
+                   <motion.div 
+                     initial={{ opacity: 0 }} 
+                     animate={{ opacity: 1 }}
+                     className="col-span-full flex flex-col items-center justify-center py-20 text-zinc-500"
+                   >
+                     <Search className="w-16 h-16 mb-4 opacity-20" />
+                     <p className="text-lg">No programs found matching your search.</p>
+                     <button 
+                       onClick={() => { setSearchTerm(''); setSelectedCategory('ALL'); }}
+                       className="mt-4 text-emerald-500 hover:underline"
+                     >
+                       Clear filters
+                     </button>
+                   </motion.div>
+                 ) : (
+                   filteredCourses.map((course) => (
+                     <CourseCard 
+                       key={course.id} 
+                       course={course} 
+                       iconPath={courseIcons[course.id]}
+                       onApply={() => handleApplyNow(course)}
+                     />
+                   ))
+                 )}
+               </AnimatePresence>
+             </div>
 
-                    <div className="mb-3">
-                      <span className="text-sm text-gray-500 font-medium">{course.category}</span>
-                    </div>
-                    
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-edtech-blue transition-colors">
-                      {course.title}
-                    </h3>
-                    
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-6 leading-relaxed">
-                      {course.desc}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-6">
-                      <span className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                        {course.duration}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                        {course.extra}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Link 
-                        to={`/program/${course.id}`} 
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-xl font-semibold text-center transition-all duration-300"
-                      >
-                        View Details
-                      </Link>
-                      <button 
-                        onClick={() => handleApplyNow(course)}
-                        className="bg-gradient-to-r from-edtech-green to-edtech-orange text-black px-6 py-3 rounded-xl font-semibold hover:brightness-110 transition-all duration-300 hover:scale-105"
-                      >
-                        Apply Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+           </div>
         </section>
 
-        {/* SECTION 3: All Courses Grid - DARK */}
-        <section className="py-16 md:py-20 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-bg-deep via-bg-deep to-edtech-blue/5" />
-          
-          <div className="relative mx-auto max-w-7xl px-6">
-            <div className="flex items-center justify-between mb-12 reveal">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  All <span className="text-edtech-orange">Programs</span>
-                </h2>
-                <p className="text-white/70 text-lg">
-                  Showing {filteredCourses.length} program{filteredCourses.length !== 1 ? 's' : ''}
-                  {selectedCategory !== 'ALL' && ` in ${selectedCategory.replace('-', ' ')}`}
-                </p>
-              </div>
-              
-              {/* Quick Filter Pills */}
-              <div className="hidden md:flex gap-2">
-                {['ALL', 'AI & ML', 'DATA ANALYTICS', 'CLOUD'].map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      selectedCategory === cat
-                        ? 'bg-edtech-green text-black'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 courses-page-reveal reveal">
-              {loading ? (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-white/70 text-lg">Loading courses...</div>
-                </div>
-              ) : filteredCourses.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-white/70 text-lg">No courses found matching your criteria.</div>
-                </div>
-              ) : (
-                filteredCourses.map((course, idx) => (
-                <article 
-                  key={`${course.id}-${idx}`} 
-                  className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden" 
-                > 
-                  {/* Course Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <span className="px-3 py-1 bg-black/30 text-white/80 rounded-full text-xs font-medium border border-white/20">
-                      {course.category}
-                    </span>
-                    <div className={`p-3 rounded-xl ${
-                      course.accent === 'edtech-green' ? 'bg-gradient-to-br from-edtech-green/20 to-green-400/20' : 
-                      course.accent === 'edtech-orange' ? 'bg-gradient-to-br from-edtech-orange/20 to-orange-400/20' :
-                      course.accent === 'edtech-red' ? 'bg-gradient-to-br from-red-500/20 to-red-400/20' :
-                      'bg-gradient-to-br from-edtech-orange/20 to-orange-400/20'
-                    }`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d={courseIcons[course.id] || 'M13 10V3L4 14h7v7l9-11h-7z'}/>
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Course Content */}
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-edtech-orange transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="text-white/70 text-sm line-clamp-3 leading-relaxed">
-                      {course.desc}
-                    </p>
-                  </div>
-
-                  {/* Course Meta */}
-                  <div className="flex items-center gap-4 text-xs text-white/60 mb-6">
-                    <span className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                      {course.duration}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                      {course.extra}
-                    </span>
-                  </div>
-
-                  {/* Course Actions */}
-                  <div className="flex items-center gap-3">
-                    <Link 
-                      to={`/program/${course.id}`} 
-                      className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl font-medium text-center transition-all duration-300 border border-white/20 hover:border-white/40"
-                    >
-                      View Details
-                    </Link>
-                    <button 
-                      onClick={() => handleApplyNow(course)}
-                      className="bg-gradient-to-r from-edtech-green to-edtech-orange text-black px-6 py-3 rounded-xl font-semibold hover:brightness-110 transition-all duration-300 hover:scale-105"
-                    >
-                      Apply Now
-                    </button>
-                  </div>
-                  
-                  {/* Course Badge */}
-                  <span className={`absolute top-4 right-4 px-2.5 py-1 text-xs font-bold rounded-full shadow-lg ${
-                    course.badge === 'FEATURED' ? 'bg-red-500 text-white' :
-                    course.badge === 'TRENDING' ? 'bg-edtech-green text-black' :
-                    course.badge === 'MOST POPULAR' ? 'bg-edtech-orange text-black' : 'bg-blue-500 text-white'
-                  }`}>
-                    {course.badge}
-                  </span>
-                </article>
-                ))
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* SECTION 4: Stats Section */}
+        {/* --- STATS --- */}
         <Stats />
 
-        {/* SECTION 5: CTA Section - ENHANCED */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-edtech-blue via-bg-deep to-edtech-blue relative overflow-hidden">
-          {/* <div className="absolute inset-0">
-            <TechBackground className="opacity-10" />
-          </div> */}
+        {/* --- CTA --- */}
+        <section className="py-24 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-zinc-950 to-orange-900/20" />
           
-          <div className="relative mx-auto max-w-5xl px-6 text-center">
-            <div className="bg-white/5 backdrop-blur-lg border border-white/20 rounded-3xl p-8 md:p-12">
-              <div className="mb-6">
-                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white border border-white/20">
-                  🚀 Ready to Transform Your Career?
-                </span>
+          <div className="relative mx-auto max-w-4xl px-6 text-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="p-12 rounded-3xl bg-zinc-900/50 border border-white/10 backdrop-blur-xl shadow-2xl"
+            >
+              <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-semibold mb-6 border border-white/10">
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                Not sure which path to take?
               </div>
               
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
-                Start Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-edtech-green to-edtech-orange">Learning Journey</span> Today
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Get a Personalized <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-orange-400">Career Roadmap</span>
               </h2>
               
-              <p className="text-white/80 text-xl mb-8 leading-relaxed max-w-3xl mx-auto">
-                🌐 Your <span className="text-edtech-green font-semibold">gateway to global careers</span> starts here. Join our elite community of <span className="text-edtech-orange font-semibold">learners-turned-leaders</span>
-                and master the skills that Fortune 500 companies are actively seeking right now.
+              <p className="text-zinc-300 text-lg mb-10 max-w-2xl mx-auto">
+                Talk to our expert counselors. We'll analyze your background and goals to recommend the perfect program for you.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
-                  onClick={() => openModal("Book FREE Strategy Call", "Schedule a personalized consultation to discuss your career goals and find the perfect course for you")}
-                  className="bg-gradient-to-r from-edtech-green to-edtech-orange text-black px-8 py-4 rounded-full font-bold text-lg hover:brightness-110 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  onClick={() => openContactModal("Book FREE Strategy Call", "Help me choose a course")}
+                  className="group relative overflow-hidden px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all"
                 >
-                  🎯 Claim Your FREE Strategy Call
+                  <span className="relative z-10 flex items-center gap-2">
+                    Book Free Consultation <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
                 </button>
-                <Link 
-                  to="/contact" 
-                  className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105"
-                >
-                  💬 Contact Our Team
-                </Link>
               </div>
 
-              {/* Trust Indicators */}
-              <div className="mt-8 pt-8 border-t border-white/20">
-                <div className="flex flex-wrap justify-center items-center gap-8 text-white/60">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-edtech-green" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-sm">30-Day Guarantee</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-edtech-blue" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm">Industry Certified</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-edtech-orange" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="text-sm">4.8/5 Rating</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-sm">1000+ Success Stories</span>
-                  </div>
+              <div className="mt-10 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8 text-sm text-zinc-500 font-medium">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free Guidance
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> No Obligation
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Expert Advice
                 </div>
               </div>
-            </div>
+
+            </motion.div>
           </div>
         </section>
+
       </main>
-      
       <Footer />
     </div>
   );
