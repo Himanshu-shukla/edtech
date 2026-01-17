@@ -110,7 +110,7 @@ export default function Hero({ onApplyNow }: { onApplyNow: () => void }) {
           <div className="h-[140px] sm:h-[160px] lg:h-[180px] flex items-start mb-2">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1]">
               <span className="block text-white mb-2">We Help You</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
+              <span className="text-transparent text-white bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
                 <LazyTypewriter
                   options={{
                     strings: companyInfo.heroRoles,

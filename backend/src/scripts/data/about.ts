@@ -135,9 +135,10 @@ export const companyInfo = {
   whatsappNumber: "+919643274676",
   supportEmail: "support@edtechinformative.uk",
   heroRoles: [
-    "Data • AI • Analytics ",
+    "Data • AI",
     "Generative AI",
-    "Data Science"
+    "Data Science",
+    "Analytics"
 
   ],
   carouselRoles: [
