@@ -10,8 +10,7 @@ import {
   ShoppingCart,
   Sparkles,
 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+
 
 import {
   getFeaturedCoursesData,
@@ -22,10 +21,6 @@ import type { Course } from "../types";
 import MicrosoftBadge from "./MicrosoftBadge";
 import { usePaymentModal } from "../contexts/PaymentModalContext";
 
-/* ---------------------------------- Utils --------------------------------- */
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 /* ---------------------------- Motion Variants ----------------------------- */
 

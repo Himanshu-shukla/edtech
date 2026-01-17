@@ -5,14 +5,8 @@ import {
   X, User, Mail, Phone, ArrowRight, 
   CheckCircle2, ShieldCheck, Clock, Loader2 
 } from 'lucide-react';
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { submitInstallmentInquiry } from '../api';
 
-// --- Utility ---
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 // --- Props ---
 interface CourseEnrollmentModalProps {

@@ -1,5 +1,4 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Target, ArrowDown, CheckCircle2 } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -73,7 +72,7 @@ const mobileImages = [
 ];
 
 // --- Sub-Component: Desktop Card ---
-const DesktopCard = ({ item, index, total }: { item: typeof desktopImages[0], index: number, total: number }) => {
+const DesktopCard = ({ item, index }: { item: typeof desktopImages[0], index: number, total: number }) => {
   // Calculate top offset for stacking effect (e.g., 120px, 140px, 160px...)
   const topOffset = 120 + index * 20;
   

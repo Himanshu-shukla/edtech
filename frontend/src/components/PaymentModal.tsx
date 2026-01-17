@@ -97,7 +97,7 @@ export default function PaymentModal({
   onClose, 
   course,
   coursePrice = 0,
-  source = 'unknown'
+  
 }: PaymentModalProps) {
   // --- State ---
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '', phone: '' });

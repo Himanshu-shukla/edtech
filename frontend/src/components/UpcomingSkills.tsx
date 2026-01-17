@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Activity, Zap, Sparkles } from 'lucide-react';
+import { TrendingUp, Activity, Zap } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getUpcomingSkillsData } from '../utils/dataAdapter';

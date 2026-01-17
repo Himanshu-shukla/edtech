@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, useAnimation, useInView } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, Heart, Share2, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Play, Volume2, VolumeX, Heart, Share2, Sparkles } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
