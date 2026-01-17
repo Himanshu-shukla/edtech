@@ -1,0 +1,38 @@
+export const courses = [
+  {
+    id: 'data-analytics',
+    category: 'DATA ANALYTICS',
+    badge: 'FEATURED',
+    title: '10x Data Analyst and AI Complete Certification with Microsoft',
+    desc: 'Master data analysis, AI, and Microsoft tools with hands-on projects that prepare you for real-world challenges.',
+    duration: '6 Months',
+    extra: '25+ Live Projects',
+    accent: 'edtech-green',
+    iconName: 'bar-chart',
+    featured: true,
+  },
+  {
+    id: 'data-science-masters',
+    category: 'DATA SCIENCE',
+    badge: 'TRENDING',
+    title: 'Master of Science in Data Analytics - Complete Program',
+    desc: 'Comprehensive masters-level program covering advanced machine learning, AI ethics, MLOps, business strategy, and capstone research project.',
+    duration: '24 Months',
+    extra: '185+ Lessons',
+    accent: 'edtech-green',
+    iconName: 'graduation-cap',
+    featured: true,
+  },
+  {
+    id: 'gen-ai',
+    category: 'GENERATIVE AI',
+    badge: 'TRENDING',
+    title: 'Become a Generative AI Expert: Unlocking Creativity with Code',
+    desc: 'Learn to harness the power of generative AI and build innovative solutions that drive business value.',
+    duration: '3 Months',
+    extra: '25+ Projects',
+    accent: 'edtech-orange',
+    iconName: 'star-sparkle',
+    featured: true,
+  }
+];

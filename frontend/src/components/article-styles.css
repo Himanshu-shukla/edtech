@@ -1,0 +1,106 @@
+/* Article Content Smooth Scrolling and Enhanced Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Offset scroll target to account for fixed header */
+h1[id], h2[id], h3[id] {
+  scroll-margin-top: 120px;
+}
+
+/* Table of Contents Active State Animation */
+.toc-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.toc-item.active {
+  transform: translateX(4px);
+}
+
+.toc-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, #D5DE24, #EF552C);
+  border-radius: 2px;
+}
+
+/* Article Typography Improvements */
+.article-content {
+  font-feature-settings: "kern" 1, "liga" 1, "frac" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  position: relative;
+}
+
+/* Hover effect for headings - removed annoying # symbol */
+
+/* Enhanced list styling */
+.article-content ul {
+  position: relative;
+}
+
+.article-content li {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.article-content li::marker {
+  color: #EF552C;
+}
+
+/* Code styling improvements */
+.article-content code {
+  font-size: 0.9em;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+/* Reading progress indicator */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(to right, #D5DE24, #EF552C);
+  z-index: 1000;
+  transition: width 0.1s ease;
+}
+
+/* Focus states for accessibility */
+.toc-item:focus {
+  outline: 2px solid #D5DE24;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Reveal animation fix */
+.reveal {
+  opacity: 1; /* Make sure elements are visible by default */
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* The reveal animation effect - but start as already visible */
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  h1[id], h2[id], h3[id] {
+    scroll-margin-top: 100px;
+  }
+}

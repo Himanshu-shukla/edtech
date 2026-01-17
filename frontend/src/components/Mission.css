@@ -1,0 +1,8 @@
+.mission-1, 
+.mission-2, 
+.mission-3, 
+.mission-4 {
+  position: sticky;
+  top: 120px;
+  z-index: 10;
+}
