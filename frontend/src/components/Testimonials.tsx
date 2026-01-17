@@ -1,172 +1,127 @@
-import { useState, useEffect } from 'react';
-import { getTestimonialsData, getSuccessStatsData } from '../utils/dataAdapter';
-import type { Testimonial, SuccessStat } from '../types';
+import { useState, useEffect, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { Quote, Star, User, Briefcase } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import {
+  getTestimonialsData,
+  getSuccessStatsData,
+} from "../utils/dataAdapter";
+import type { Testimonial, SuccessStat } from "../types";
 
+/* ---------------------------------- Utils --------------------------------- */
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+/* -------------------------- Accent Color Mapping --------------------------- */
+/**
+ * Maps backend/domain accent values → Tailwind classes
+ * Keeps UI decoupled from API
+ */
+const ACCENT_COLOR_MAP: Record<
+  "green" | "orange" | "blue" | "red",
+  string
+> = {
+  green: "bg-emerald-500",
+  orange: "bg-orange-500",
+  blue: "bg-blue-500",
+  red: "bg-red-500",
+};
+
+/* ----------------------------- Counter Block ------------------------------- */
+function Counter({
+  value,
+  label,
+  colorClass,
+  delay,
+}: {
+  value: string;
+  label: string;
+  colorClass: string;
+  delay: number;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.6 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ type: "spring", delay, stiffness: 100 }}
+      className="relative p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 text-center"
+    >
+      <div className={cn("text-4xl font-extrabold mb-2", colorClass)}>
+        {value}
+      </div>
+      <div className="text-zinc-400 text-sm uppercase tracking-wider">
+        {label}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ----------------------------- Main Section -------------------------------- */
 export default function Testimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [successStats, setSuccessStats] = useState<SuccessStat[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [successStats, setSuccessStats] = useState<SuccessStat[]>([]);
-
   useEffect(() => {
-    const loadData = async () => {
+    const load = async () => {
       try {
-        const [testimonialsData, successStatsData] = await Promise.all([
+        const [t, s] = await Promise.all([
           getTestimonialsData(),
-          getSuccessStatsData()
+          getSuccessStatsData(),
         ]);
-        setTestimonials(testimonialsData);
-        setSuccessStats(successStatsData);
-      } catch (error) {
-        console.error('Error loading testimonials data:', error);
-        setTestimonials([]);
-        setSuccessStats([]);
+        setTestimonials(t);
+        setSuccessStats(s);
       } finally {
         setLoading(false);
       }
     };
-
-    loadData();
+    load();
   }, []);
 
-  // Initialize scroll reveal for dynamic content after data loads
-  useEffect(() => {
-    if (!loading && testimonials.length > 0) {
-      const timer = setTimeout(() => {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
-            });
-          },
-          { threshold: 0.1 }
-        );
-        
-        const testimonialRevealElements = document.querySelectorAll('.testimonial-reveal');
-        testimonialRevealElements.forEach((el) => observer.observe(el));
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading, testimonials.length]);
-
-  if (loading) {
-    return (
-      <section id="testimonials" className="py-8 md:py-12 relative overflow-hidden bg-white">
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <div className="text-gray-600 text-lg">Loading testimonials...</div>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section id="testimonials" className="py-8 md:py-12 relative overflow-hidden bg-white">
-      <div className="mx-auto max-w-7xl px-6">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <div className="badge-hero mx-auto w-max">
-            <span>⭐</span>
-            <span>SUCCESS STORIES</span>
-          </div>
-          <h2 className="mt-6 text-3xl md:text-4xl font-bold text-gray-900">
-           From Learners to 
-            <span className="text-edtech-orange font-extrabold"> Leaders</span>
+    <section className="relative py-24 bg-zinc-950">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold text-white">
+            Learner <span className="text-orange-400">Success Stories</span>
           </h2>
-          <p className="mt-4 text-gray-800 max-w-3xl mx-auto font-semibold">
-           Discover how our learners turned <span className="text-edtech-blue font-bold">skills into opportunities</span> and <span className="text-edtech-orange font-bold">dreams into careers</span>.
-          </p>
         </div>
 
-        {/* Success Stats */}
-        {successStats.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {successStats.map((stat, index) => (
-              <div key={index} className="text-center testimonial-reveal reveal">
-                <div className={`text-4xl md:text-5xl font-extrabold mb-2 ${
-                  index === 0 ? 'text-edtech-green' : 
-                  index === 1 ? 'text-edtech-orange' : 
-                  'text-edtech-blue'
-                }`}>
-                  {stat.value}
-                </div>
-                <div className="text-gray-700 font-semibold">
-                  {stat.label}
-                </div>
-              </div>
+        {/* Stats */}
+        {!loading && (
+          <div className="grid md:grid-cols-3 gap-6 mb-24">
+            {successStats.map((stat, i) => (
+              <Counter
+                key={i}
+                value={stat.value}
+                label={stat.label}
+                delay={i * 0.1}
+                colorClass={
+                  i === 0
+                    ? "text-emerald-400"
+                    : i === 1
+                    ? "text-orange-400"
+                    : "text-blue-400"
+                }
+              />
             ))}
           </div>
         )}
 
-        {/* Testimonials Grid */}
+        {/* Testimonials */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials.length === 0 ? (
-            <div className="col-span-full text-center text-gray-600">
-              No testimonials available at the moment.
-            </div>
+          {loading ? (
+            <p className="text-zinc-500">Loading…</p>
           ) : (
-            testimonials.map((testimonial) => (
-            <article 
-              key={testimonial.id} 
-              className="testimonial-card group testimonial-reveal reveal"
-              data-accent={testimonial.accent}
-            >
-              {/* Category Badge */}
-              <div className="testimonial-category">
-                {testimonial.category}
-              </div>
-
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <span 
-                      key={i} 
-                      className={`text-lg ${i < Math.floor(testimonial.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-gray-700">
-                  ({testimonial.rating})
-                </span>
-              </div>
-
-              {/* Review Text */}
-              <blockquote className="text-gray-800 leading-relaxed mb-6 font-medium">
-                "{testimonial.review}"
-              </blockquote>
-
-              {/* Author Info */}
-              <div className="testimonial-author">
-                {testimonial.photo && (
-                  <div className="mr-4 rounded-full overflow-hidden border-2 border-gray-300">
-                    <img 
-                      src={testimonial.photo} 
-                      alt={`${testimonial.name}'s photo`}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  </div>
-                )}
-                <div>
-                  <div className="font-bold text-gray-900">
-                    {testimonial.name}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {testimonial.role}
-                    {testimonial.company && (
-                      <span>, {testimonial.company}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Accent indicator */}
-              <div className="testimonial-indicator">
-                <div className="pulse-dot"></div>
-              </div>
-            </article>
+            testimonials.map((t, i) => (
+              <TestimonialCard key={t.id} testimonial={t} index={i} />
             ))
           )}
         </div>
@@ -175,3 +130,85 @@ export default function Testimonials() {
   );
 }
 
+/* --------------------------- Testimonial Card ------------------------------ */
+function TestimonialCard({
+  testimonial,
+  index,
+}: {
+  testimonial: Testimonial;
+  index: number;
+}) {
+  // ✅ SAFE: accent is guaranteed union
+  const accentClass =
+    ACCENT_COLOR_MAP[testimonial.accent ?? "blue"];
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className="relative p-8 rounded-3xl bg-zinc-900/40 border border-zinc-800 hover:-translate-y-1 transition"
+    >
+      {/* Quote */}
+      <Quote className="absolute top-6 right-6 w-12 h-12 text-zinc-800" />
+
+      {/* Category */}
+      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800 text-xs text-zinc-400 mb-4">
+        <Briefcase className="w-3 h-3" />
+        {testimonial.category}
+      </span>
+
+      {/* Stars */}
+      <div className="flex gap-1 mb-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            className={
+              i < testimonial.rating
+                ? "w-4 h-4 fill-yellow-500 text-yellow-500"
+                : "w-4 h-4 text-zinc-700"
+            }
+          />
+        ))}
+      </div>
+
+      {/* Review */}
+      <p className="text-zinc-300 mb-8">
+        “{testimonial.review}”
+      </p>
+
+      {/* Author */}
+      <div className="flex items-center gap-4 pt-6 border-t border-zinc-800">
+        <div className="relative">
+          <div
+            className={cn(
+              "absolute inset-0 rounded-full blur opacity-30",
+              accentClass
+            )}
+          />
+          {testimonial.photo ? (
+            <img
+              src={testimonial.photo}
+              className="relative w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <div className="relative w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+              <User className="w-6 h-6 text-zinc-400" />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h4 className="text-white font-bold text-sm">
+            {testimonial.name}
+          </h4>
+          <p className="text-xs text-zinc-500">
+            {testimonial.role}
+            {testimonial.company && ` · ${testimonial.company}`}
+          </p>
+        </div>
+      </div>
+    </motion.article>
+  );
+}

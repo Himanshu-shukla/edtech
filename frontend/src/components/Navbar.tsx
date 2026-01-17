@@ -1,16 +1,36 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Menu, X, ChevronDown, Sparkles, ArrowRight, Zap, 
+  GraduationCap, Phone 
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import WhiteLogo from "../assets/WHITE-LOGO--300x152.png";
 import { getCoursesData } from "../utils/dataAdapter";
 import { useContactModal } from "../contexts/ContactModalContext";
 import type { Course } from "../types";
+
+// --- Utility ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coursesDropdownOpen, setCoursesDropdownOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
   const { openModal } = useContactModal();
+
+  // Handle scroll effect for navbar background
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -24,187 +44,244 @@ export default function Navbar() {
         setLoading(false);
       }
     };
-
     loadCourses();
   }, []);
 
   const displayedCourses = courses.slice(0, 4);
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-bg-deep/95 backdrop-blur-lg">
-      <div className="bg-edtech-green text-black text-center py-2 text-sm">
-        <span className="flex items-center justify-center gap-2">
-          <span className="hidden sm:inline">✨ Ready to level up? Master in-demand tech skills & fast-track your career 🚀 -  </span>
+    <>
+      {/* --- Top Banner --- */}
+      <div className="relative bg-zinc-950 border-b border-white/10 text-center py-2 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/20 via-transparent to-emerald-900/20 pointer-events-none" />
+        <div className="relative z-10 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-zinc-300">
+          <Sparkles className="w-3 h-3 text-emerald-400 hidden sm:block" />
+          <span>
+            <span className="hidden sm:inline text-zinc-400">Ready to level up? Master in-demand tech skills & </span>
+            <span className="text-white">fast-track your career</span> 🚀
+          </span>
+          <span className="mx-2 text-zinc-700 hidden sm:inline">|</span>
           <button 
             onClick={() => openModal()}
-            className="underline hover:text-black/70 transition-colors cursor-pointer font-bold"
+            className="group flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors font-bold underline decoration-emerald-500/30 underline-offset-4"
           >
-            Claim your FREE strategy call now! →
+            Claim FREE strategy call
+            <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </button>
-        </span>
+        </div>
       </div>
-      <div className="w-full px-6 h-16 flex items-center justify-between">
-        {/* Logo - Left */}
-        <Link to="/" className="flex items-center gap-3 ml-6">
-          <img src={WhiteLogo} alt="EdTech Informative" className="h-12 w-auto" />
-          <span className="sr-only">EdTech Informative</span>
-        </Link>
-        
-        {/* Navigation - Center */}
-        <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-white/90">
-          <Link to="/" className="hover:text-edtech-orange transition-colors font-semibold">Home</Link>
+
+      {/* --- Main Navbar --- */}
+      <nav 
+        className={cn(
+          "fixed inset-x-0 top-[37px] sm:top-[41px] z-50 border-b transition-all duration-300",
+          scrolled 
+            ? "bg-zinc-950/80 backdrop-blur-xl border-white/10 py-2 shadow-lg shadow-black/20" 
+            : "bg-transparent border-transparent py-4"
+        )}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           
-          {/* Courses Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setCoursesDropdownOpen(true)}
-            onMouseLeave={() => setCoursesDropdownOpen(false)}
-          >
-            <button className="flex items-center gap-1 hover:text-edtech-orange transition-colors group font-semibold">
-              Programs
-              <svg 
-                className={`w-4 h-4 ml-1 transition-transform duration-200 ${coursesDropdownOpen ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 relative z-50 group">
+            <img 
+              src={WhiteLogo} 
+              alt="EdTech Informative" 
+              className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity" 
+            />
+          </Link>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <NavLink to="/">Home</NavLink>
             
-            {coursesDropdownOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-80">
-                {/* Invisible bridge to maintain hover */}
-                <div className="h-2 w-full"></div>
-                
-                <div className="bg-bg-deep/95 backdrop-blur-md rounded-2xl border border-white/30 shadow-2xl p-6 animate-fadeIn">
-                  <div className="mb-4">
-                    <h3 className="text-white font-bold text-base mb-1">Popular Programs</h3>
-                    <p className="text-white/60 text-sm font-medium">Industry-leading certification programs</p>
-                  </div>
-                  
-                  <div className="space-y-3 mb-4">
-                    {loading ? (
-                      <div className="text-white/60 text-sm">Loading programs...</div>
-                    ) : displayedCourses.length === 0 ? (
-                      <div className="text-white/60 text-sm">No programs available</div>
-                    ) : (
-                      displayedCourses.map((course) => (
-                      <Link 
-                        key={course.id} 
-                        to={`/program/${course.id}`}
-                        className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group"
-                      >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 ${
-                          course.accent === 'edtech-green' ? 'bg-gradient-to-br from-edtech-green to-green-400' : 
-                          course.accent === 'edtech-orange' ? 'bg-gradient-to-br from-edtech-orange to-orange-400' :
-                          'bg-gradient-to-br from-edtech-red to-red-400'
-                        }`}>
-                          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-white text-sm font-semibold leading-tight line-clamp-2 mb-2 group-hover:text-edtech-orange transition-colors">
-                            {course.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className={`px-2 py-1 rounded-full text-black font-bold text-xs ${
-                              course.badge === 'FEATURED' ? 'bg-edtech-red' :
-                              course.badge === 'TRENDING' ? 'bg-edtech-green' :
-                              course.badge === 'MOST POPULAR' ? 'bg-edtech-orange' : 'bg-white'
-                            }`}>
-                              {course.badge}
-                            </span>
-                            <span className="text-white/60 font-medium">{course.duration}</span>
-                          </div>
-                        </div>
-                      </Link>
-                      ))
-                    )}
-                  </div>
-                  
-                  <div className="pt-4 border-t border-white/10">
-                    <Link 
-                      to="/programs" 
-                      className="flex items-center justify-between text-white/70 hover:text-edtech-orange transition-colors p-3 rounded-xl hover:bg-white/5 group"
-                    >
-                      <div>
-                        <div className="font-semibold">Explore All Programs</div>
-                        <div className="text-sm text-white/50 font-medium">View our complete program catalog</div>
+            {/* Dropdown Trigger */}
+            <div 
+              className="relative group h-full flex items-center"
+              onMouseEnter={() => setCoursesDropdownOpen(true)}
+              onMouseLeave={() => setCoursesDropdownOpen(false)}
+            >
+              <button 
+                className={cn(
+                  "flex items-center gap-1.5 text-sm font-medium transition-colors outline-none",
+                  coursesDropdownOpen ? "text-orange-500" : "text-zinc-400 hover:text-white"
+                )}
+              >
+                Programs
+                <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", coursesDropdownOpen && "rotate-180")} />
+              </button>
+              
+              {/* Dropdown Content */}
+              <AnimatePresence>
+                {coursesDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 pt-6 w-[400px]"
+                  >
+                    {/* Invisible Bridge */}
+                    <div className="absolute top-0 left-0 w-full h-6" />
+
+                    <div className="relative bg-zinc-900/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+                      {/* Decoration */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+                      
+                      <div className="p-5 border-b border-white/5">
+                        <h3 className="text-white font-bold flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-orange-500" />
+                          Popular Programs
+                        </h3>
+                        <p className="text-zinc-500 text-xs mt-1">Industry-leading certification programs</p>
                       </div>
-                      <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </div>
+                      
+                      <div className="p-2 grid gap-1">
+                        {loading ? (
+                          <div className="p-4 text-center text-zinc-500 text-sm">Loading...</div>
+                        ) : displayedCourses.length === 0 ? (
+                          <div className="p-4 text-center text-zinc-500 text-sm">No programs available</div>
+                        ) : (
+                          displayedCourses.map((course) => (
+                            <Link 
+                              key={course.id} 
+                              to={`/program/${course.id}`}
+                              className="group flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                            >
+                              <div className={cn(
+                                "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-inner",
+                                course.accent === 'edtech-green' ? 'bg-emerald-500/20 text-emerald-400' : 
+                                course.accent === 'edtech-orange' ? 'bg-orange-500/20 text-orange-400' :
+                                'bg-red-500/20 text-red-400'
+                              )}>
+                                <GraduationCap className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start">
+                                  <h4 className="text-zinc-200 text-sm font-semibold group-hover:text-orange-400 transition-colors line-clamp-1">
+                                    {course.title}
+                                  </h4>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={cn(
+                                    "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide",
+                                    course.badge === 'FEATURED' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
+                                    course.badge === 'TRENDING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
+                                    course.badge === 'MOST POPULAR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20' : 
+                                    'hidden'
+                                  )}>
+                                    {course.badge}
+                                  </span>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+                      
+                      <div className="p-3 bg-zinc-950/50 border-t border-white/5">
+                        <Link 
+                          to="/programs" 
+                          className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-400 hover:text-white py-2 rounded-lg hover:bg-white/5 transition-colors group"
+                        >
+                          View All Programs
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            <NavLink to="/pricing">Pricing</NavLink>
+            <NavLink to="/about">About</NavLink>
+            <NavLink to="/contact" onClick={openModal}>Contact</NavLink>
+          </div>
+
+          {/* CTA & Mobile Toggle */}
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => openModal()}
+              className="hidden md:flex relative overflow-hidden group rounded-lg bg-white px-5 py-2.5 transition-all hover:scale-105 active:scale-95"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-100 via-white to-orange-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="relative flex items-center gap-2 text-sm font-bold text-black">
+                <Phone className="w-4 h-4 fill-current" />
+                Book Strategy Call
+              </span>
+            </button>
+
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* --- Mobile Menu --- */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="md:hidden overflow-hidden bg-zinc-950 border-b border-white/10"
+            >
+              <div className="px-6 py-6 space-y-4">
+                <MobileLink to="/" onClick={() => setMobileOpen(false)}>Home</MobileLink>
+                <MobileLink to="/programs" onClick={() => setMobileOpen(false)}>All Programs</MobileLink>
+                <MobileLink to="/pricing" onClick={() => setMobileOpen(false)}>Pricing</MobileLink>
+                <MobileLink to="/about" onClick={() => setMobileOpen(false)}>About</MobileLink>
+                <MobileLink to="/contact" onClick={() => { setMobileOpen(false); openModal(); }}>Contact Us</MobileLink>
+                
+                <div className="pt-4 mt-4 border-t border-white/10">
+                  <button 
+                    onClick={() => {
+                      setMobileOpen(false);
+                      openModal();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white p-3 rounded-xl font-bold active:scale-95 transition-transform"
+                  >
+                    <Phone className="w-4 h-4" />
+                    Book FREE Strategy Call
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-          
-          <Link to="/pricing" className="hover:text-edtech-orange transition-colors font-semibold">Pricing</Link>
-          <Link to="/about" className="hover:text-edtech-orange transition-colors font-semibold">About</Link>
-          {/* <Link to="/blog" className="hover:text-edtech-orange transition-colors font-semibold">Blog</Link> */}
-          <Link to="/contact"  onClick={() => openModal()} className="hover:text-edtech-orange transition-colors font-semibold">Contact Us</Link>
-        </div>
-        
-        {/* CTA Button - Right */}
-        <div className="hidden md:block">
-          <button 
-            onClick={() => openModal()}
-            className="group relative inline-flex items-center gap-2 cta-flow text-black px-4 py-2 rounded-lg font-bold hover:scale-105 transition-transform duration-200"
-          >
-              <span className="relative z-10 font-bold">
-              <span className="hidden lg:inline">Book FREE Strategy Call</span>
-              <span className="lg:hidden">Book Call</span>
-            </span>
-            <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-        <button
-          aria-label="Menu"
-          className={`md:hidden ml-3 p-2 rounded-lg border transition-colors ${mobileOpen ? 'bg-edtech-orange text-black border-edtech-orange' : 'border-white/20 text-white/80 hover:text-white'}`}
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
+            </motion.div>
           )}
-        </button>
-      </div>
-      {mobileOpen && (
-        <div className="md:hidden absolute inset-x-0 top-full bg-bg-deep/95 backdrop-blur-lg border-b border-white/15 animate-slideDown">
-          <div className="px-6 py-4 flex flex-col gap-3 text-sm font-medium">
-            <Link to="/" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white font-semibold">Home</Link>
-            <Link to="/programs" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white font-semibold">All Programs</Link>
-            <Link to="/pricing" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white font-semibold">Pricing</Link>
-            <Link to="/about" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white font-semibold">About</Link>
-            {/* <Link to="/blog" onClick={() => setMobileOpen(false)} className="text-white/90 hover:text-white font-semibold">Blog</Link> */}
-            <Link to="/contact" onClick={() => { setMobileOpen(false); openModal(); }} className="text-white/90 hover:text-white font-semibold">Contact Us</Link>
-            <button 
-              onClick={() => {
-                setMobileOpen(false);
-                openModal();
-              }}
-              className="group inline-flex items-center justify-center gap-2 cta-flow text-black px-4 py-2 rounded-lg font-bold w-full mt-2"
-            >
-              <span className="relative z-10 font-bold">Book FREE Strategy Call</span>
-              <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
+        </AnimatePresence>
+      </nav>
+    </>
   );
 }
 
+// --- Helper Components ---
+
+function NavLink({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <Link 
+      to={to} 
+      onClick={onClick}
+      className="text-sm font-medium text-zinc-400 hover:text-white transition-colors relative group"
+    >
+      {children}
+      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
+    </Link>
+  );
+}
+
+function MobileLink({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <Link 
+      to={to} 
+      onClick={onClick}
+      className="block text-lg font-medium text-zinc-300 hover:text-white hover:translate-x-2 transition-all"
+    >
+      {children}
+    </Link>
+  );
+}

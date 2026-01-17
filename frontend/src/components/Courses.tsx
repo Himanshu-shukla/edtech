@@ -1,17 +1,66 @@
 import { useState, useEffect } from "react";
-import toast from 'react-hot-toast';
-import { getFeaturedCoursesData, getCourseIcon, getCourseDetailsData } from "../utils/dataAdapter";
-import type { Course } from "../types";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
+import toast from "react-hot-toast";
+import {
+  Clock,
+  BarChart,
+  ChevronRight,
+  ShoppingCart,
+  Sparkles,
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+import {
+  getFeaturedCoursesData,
+  getCourseIcon,
+  getCourseDetailsData,
+} from "../utils/dataAdapter";
+import type { Course } from "../types";
 import MicrosoftBadge from "./MicrosoftBadge";
-// Removed - using direct payment flow now
 import { usePaymentModal } from "../contexts/PaymentModalContext";
+
+/* ---------------------------------- Utils --------------------------------- */
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+/* ---------------------------- Motion Variants ----------------------------- */
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 30,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 50,
+      damping: 15,
+    },
+  },
+};
+
+/* ----------------------------- Main Section -------------------------------- */
 
 export default function CoursesSection() {
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [courseIcons, setCourseIcons] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  // Removed - using direct payment flow now
   const { openModal: openPaymentModal } = usePaymentModal();
 
   useEffect(() => {
@@ -19,22 +68,21 @@ export default function CoursesSection() {
       try {
         const data = await getFeaturedCoursesData();
         setFeaturedCourses(data);
-        
-        // Load icons for all courses
-        const iconPromises = data.map(async (course) => {
-          const icon = await getCourseIcon(course);
-          return { id: course.id, icon };
-        });
-        
+
+        const iconPromises = data.map(async (course) => ({
+          id: course.id,
+          icon: await getCourseIcon(course),
+        }));
+
         const resolvedIcons = await Promise.all(iconPromises);
-        const iconsMap = resolvedIcons.reduce((acc, { id, icon }) => {
-          acc[id] = icon;
-          return acc;
-        }, {} as Record<string, string>);
-        
-        setCourseIcons(iconsMap);
+        setCourseIcons(
+          resolvedIcons.reduce((acc, cur) => {
+            acc[cur.id] = cur.icon;
+            return acc;
+          }, {} as Record<string, string>)
+        );
       } catch (error) {
-        console.error('Error loading featured courses:', error);
+        console.error(error);
         setFeaturedCourses([]);
       } finally {
         setLoading(false);
@@ -44,126 +92,185 @@ export default function CoursesSection() {
     loadFeaturedCourses();
   }, []);
 
-  // Initialize scroll reveal animation after courses are loaded
-  useEffect(() => {
-    let observer: IntersectionObserver | null = null;
-    
-    if (!loading && featuredCourses.length > 0) {
-      // Small delay to ensure DOM is updated
-      const timer = setTimeout(() => {
-        observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
-            });
-          },
-          { threshold: 0.1 }
-        );
-        
-        // Only observe course cards in this component
-        const courseCards = document.querySelectorAll('.course-card.reveal');
-        courseCards.forEach((el) => observer!.observe(el));
-      }, 100);
-      
-      return () => {
-        clearTimeout(timer);
-        if (observer) {
-          observer.disconnect();
-        }
-      };
-    }
-  }, [loading, featuredCourses.length]);
-
-  // Removed - not used after payment integration
-
   const handleBuyNow = async (course: Course) => {
-    // Course pricing comes from CourseDetails, not Course directly
     try {
       const courseDetails = await getCourseDetailsData(course.id);
       if (!courseDetails?.pricing?.current) {
-        toast.error('Pricing information not available for this course. Please contact support.');
+        toast.error("Pricing unavailable");
         return;
       }
-      openPaymentModal(course, courseDetails.pricing.current, 'home-featured-courses');
-    } catch (error) {
-      toast.error('Unable to load course pricing. Please contact support.');
+      openPaymentModal(
+        course,
+        courseDetails.pricing.current,
+        "home-featured-courses"
+      );
+    } catch {
+      toast.error("Unable to load pricing");
     }
   };
 
   return (
-    <section  id="featured-programs" className="py-8 md:py-12">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-10">
-          <div className="badge-hero mx-auto w-max"><span>🚀</span><span>MOST POPULAR PROGRAMS</span></div>
-          
-          {/* Microsoft Partnership Badge */}
-          <div className="mt-6 mb-6 flex justify-center">
+    <section
+      id="featured-programs"
+      className="relative py-20 overflow-hidden"
+    >
+      {/* Glow Background */}
+      <div className="absolute -left-64 top-1/4 w-96 h-96 bg-emerald-500/10 blur-[120px]" />
+      <div className="absolute -right-64 bottom-1/4 w-96 h-96 bg-orange-500/10 blur-[120px]" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-16 space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-orange-400">
+            <Sparkles className="w-3 h-3" />
+            MOST POPULAR PROGRAMS
+          </div>
+
+          <div className="flex justify-center">
             <MicrosoftBadge size="md" />
           </div>
 
-          <h2 className="mt-6 text-3xl md:text-4xl font-bold">Top-Rated <span className="text-edtech-orange font-extrabold">Programs</span></h2>
-          <p className="mt-2 text-white/70 max-w-2xl mx-auto"> <span className="text-edtech-green font-bold">Industry-recognized certifications</span> that give you the edge where it matters most — the workplace.</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white">
+            Top-Rated{" "}
+            <span className="bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">
+              Programs
+            </span>
+          </h2>
+
+          <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
+            Industry-recognized certifications that accelerate careers.
+          </p>
         </div>
 
-        {/* Grid layout for featured courses only */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {featuredCourses.map((c, idx) => (
-            <article key={`${c.id}-${idx}`} className="course-card p-4 flex flex-col relative reveal" data-accent={c.accent.replace('edtech-','')} style={{ animationDelay: `${idx * 150}ms` }}> 
+        {/* Loading */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
               <div
-                className="course-head relative overflow-hidden"
-                style={c.image ? {
-                  backgroundImage: `url(${import.meta.env.VITE_API_BASE_URL}/uploads/course-images/${c.image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  minHeight: '120px',
-                  borderRadius: '0.75rem',
-                } : {
-                  minHeight: '120px',
-                  borderRadius: '0.75rem',
-                }}
-              >
-                {c.image ? (
-                  <div className="absolute inset-0 bg-black/20 z-0" />
-                ) : (
-                  <div className="relative z-10 flex items-center gap-2 p-3">
-                    <div className="course-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d={courseIcons[c.id] || 'M13 10V3L4 14h7v7l9-11h-7z'}/>
-                      </svg>
-                    </div>
-                  </div>
-                )}
-              </div>
+                key={i}
+                className="h-[420px] rounded-2xl bg-zinc-900/50 border border-zinc-800 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
 
-              <div className="mt-4">
-                <h3 className="course-title mt-2 text-[18px] font-semibold leading-snug line-clamp-2">{c.title}</h3>
-                <p className="mt-2 text-[13px] text-white/70 line-clamp-2">{c.desc}</p>
-              </div>
+        {/* Courses */}
+        {!loading && (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {featuredCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                iconPath={courseIcons[course.id]}
+                onBuy={() => handleBuyNow(course)}
+              />
+            ))}
+          </motion.div>
+        )}
 
-              <div className="mt-4 flex items-center gap-3 text-[12px] text-white/70">
-                <span className="chip"><span className="meta-dot"/> {c.duration}</span>
-                <span className="chip"><span className="meta-dot"/> {c.extra}</span>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3">
-                <Link to={`/program/${c.id}`} className="cta cta-secondary">View Details</Link>
-                <button 
-                  onClick={() => handleBuyNow(c)}
-                  className="cta course-card-apply"
-                >
-                  Buy Now
-                </button>
-              </div>
-                <span className="corner-badge">{c.badge}</span>
-            </article>
-          ))}
-        </div>
-
-        <div className="mt-12 flex justify-center">
-          <Link to="/programs" className="cta cta-secondary hover:text-edtech-orange">View All Programs</Link>
+        {/* Footer CTA */}
+        <div className="flex justify-center mt-14">
+          <Link
+            to="/programs"
+            className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-orange-500/50 hover:text-white transition"
+          >
+            View All Programs
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </div>
     </section>
   );
 }
 
+/* ------------------------------ Course Card -------------------------------- */
+
+function CourseCard({
+  course,
+  iconPath,
+  onBuy,
+}: {
+  course: Course;
+  iconPath?: string;
+  onBuy: () => void;
+}) {
+  const imageUrl = course.image
+    ? `${import.meta.env.VITE_API_BASE_URL}/uploads/course-images/${course.image}`
+    : null;
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      className="group flex flex-col rounded-3xl bg-zinc-900/40 border border-zinc-800 overflow-hidden hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl"
+    >
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden bg-zinc-950">
+        {imageUrl ? (
+          <>
+            <img
+              src={imageUrl}
+              alt={course.title}
+              className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent" />
+          </>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <svg
+              className="w-10 h-10 text-orange-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path d={iconPath || "M13 10V3L4 14h7v7l9-11h-7z"} />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-6">
+        <h3 className="text-xl font-bold text-white mb-2">
+          {course.title}
+        </h3>
+        <p className="text-sm text-zinc-400 mb-4 line-clamp-2">
+          {course.desc}
+        </p>
+
+        <div className="flex gap-4 text-xs text-zinc-500 mb-6">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {course.duration}
+          </div>
+          <div className="flex items-center gap-1">
+            <BarChart className="w-3.5 h-3.5" />
+            {course.extra}
+          </div>
+        </div>
+
+        <div className="mt-auto grid grid-cols-2 gap-3">
+          <Link
+            to={`/program/${course.id}`}
+            className="py-2.5 rounded-xl bg-zinc-800 text-center text-sm font-semibold text-zinc-300 hover:bg-zinc-700"
+          >
+            Details
+          </Link>
+          <button
+            onClick={onBuy}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold text-sm hover:scale-[1.02] transition"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Buy Now
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

@@ -1,7 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { 
+  X, User, Mail, Phone, ArrowRight, 
+  CheckCircle2, ShieldCheck, Clock, Loader2 
+} from 'lucide-react';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { submitInstallmentInquiry } from '../api';
 
+// --- Utility ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+// --- Props ---
 interface CourseEnrollmentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,6 +23,40 @@ interface CourseEnrollmentModalProps {
   courseCategory?: string;
   source?: string;
 }
+
+// --- Internal Components ---
+
+const InputGroup = ({ 
+  id, 
+  label, 
+  icon: Icon, 
+  type = "text", 
+  placeholder, 
+  value, 
+  onChange, 
+  required = false 
+}: any) => (
+  <div className="space-y-2">
+    <label htmlFor={id} className="text-xs font-medium text-zinc-400 ml-1">
+      {label} {required && <span className="text-emerald-500">*</span>}
+    </label>
+    <div className="relative group">
+      <div className="absolute left-3 top-2.5 text-zinc-500 group-focus-within:text-emerald-400 transition-colors">
+        <Icon className="w-5 h-5" />
+      </div>
+      <input
+        type={type}
+        id={id}
+        name={id}
+        required={required}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full bg-zinc-900/50 border border-zinc-800 text-white rounded-xl py-2.5 pl-10 pr-4 outline-none placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all duration-300"
+      />
+    </div>
+  </div>
+);
 
 export default function CourseEnrollmentModal({ 
   isOpen, 
@@ -24,6 +71,13 @@ export default function CourseEnrollmentModal({
     phone: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setTimeout(() => setFormData({ name: '', email: '', phone: '' }), 300);
+    }
+  }, [isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,164 +95,148 @@ export default function CourseEnrollmentModal({
         courseName,
         source: source || 'course_enrollment_modal'
       });
-      setIsSubmitting(false);
-      setFormData({ name: '', email: '', phone: '' });
+      toast.success(result.message || "Application submitted successfully!");
       onClose();
-      toast.success(result.message);
     } catch (error) {
-      setIsSubmitting(false);
       toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData({ name: '', email: '', phone: '' });
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-bg-deep/95 backdrop-blur border border-white/20 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all mx-4">
-          {/* Close Button */}
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10 p-1 rounded-lg hover:bg-white/10"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          
+          {/* Modal Container */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+            className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
-          {/* Header */}
-          <div className="mb-6 pr-8">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Apply for Course
-            </h2>
-            <p className="text-white/70 text-sm leading-relaxed mb-3">
-              You're applying for: <span className="text-edtech-orange font-semibold">{courseName}</span>
-            </p>
-            <p className="text-white/60 text-xs leading-relaxed">
-              Fill in your details and our team will contact you with enrollment information and next steps.
-            </p>
-          </div>
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
-                Full Name <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="text"
+            {/* Header */}
+            <div className="px-6 pt-8 pb-4 relative z-10">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Start Learning
+              </h2>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                You are applying for <span className="text-emerald-400 font-semibold">{courseName}</span>.
+              </p>
+              <p className="text-zinc-500 text-xs mt-1">
+                Fill in your details below and our academic counselors will reach out to you shortly.
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-5 relative z-10">
+              
+              <InputGroup
                 id="name"
-                name="name"
-                required
+                label="Full Name"
+                icon={User}
+                placeholder="John Doe"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
-                Email Address <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
                 required
+              />
+
+              <InputGroup
+                id="email"
+                label="Email Address"
+                icon={Mail}
+                type="email"
+                placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your email address"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">
-                Phone Number <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
                 required
+              />
+
+              <InputGroup
+                id="phone"
+                label="Phone Number"
+                icon={Phone}
+                type="tel"
+                placeholder="+1 234 567 890"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your phone number"
+                required
               />
+
+              {/* Action Buttons */}
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-3 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="relative flex-[2] overflow-hidden group px-4 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        Apply Now
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </div>
+                  {/* Shimmer Effect */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </button>
+              </div>
+            </form>
+
+            {/* Footer Trust Indicators */}
+            <div className="px-6 py-4 bg-zinc-900/50 border-t border-zinc-800 flex justify-between items-center text-[10px] text-zinc-500 font-medium">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3 h-3 text-emerald-500" />
+                <span>Quick Response</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3 h-3 text-blue-500" />
+                <span>Data Secure</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-orange-500" />
+                <span>Expert Guidance</span>
+              </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="w-full sm:flex-1 px-4 py-3 border border-white/30 text-white/90 rounded-lg hover:bg-white/10 hover:border-white/50 transition-colors duration-200 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:flex-1 px-4 py-3 bg-edtech-green text-black rounded-lg hover:brightness-110 hover:scale-105 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting...
-                  </>
-                ) : (
-                  'Apply for Course'
-                )}
-              </button>
-            </div>
-          </form>
-
-          {/* Trust Indicators */}
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <div className="flex items-center justify-center gap-6 text-xs text-white/60">
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-green" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Quick Response
-              </div>
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-blue" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                Expert Guidance
-              </div>
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-orange" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                24hr Response
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
