@@ -859,49 +859,33 @@ export const getPaymentStats = async (req: Request, res: Response): Promise<void
 };
 
 // Webhook handler for Razorpay events
-export const handleWebhook = async (req: Request, res: Response): Promise<void> => {
+export const handleWebhook = async (req: Request, res: Response) => {
   try {
-    const webhook_secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    
-    if (webhook_secret) {
-      const body = JSON.stringify(req.body);
-      const expectedSignature = crypto
-        .createHmac('sha256', webhook_secret)
-        .update(body)
-        .digest('hex');
-      
-      const signature = req.headers['x-razorpay-signature'];
-      
-      if (signature !== expectedSignature) {
-        res.status(400).json({ error: 'Invalid webhook signature' });
-        return;
-      }
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET!;
+    const signature = req.headers['x-razorpay-signature'] as string;
+
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update((req as any).rawBody)
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    const { event, payload } = req.body;
+    const event = req.body.event;
 
-    // Handle different webhook events
-    switch (event) {
-      case 'payment.captured':
-        // Payment captured - webhook handled
-        break;
-      
-      case 'payment.failed':
-        // Payment failed - update order status
-        await PaymentOrderModel.updateOne(
-          { razorpayOrderId: payload.payment.entity.order_id },
-          { status: 'failed' }
-        );
-        break;
-      
-      default:
-        // Unhandled webhook event
+    if (event === 'payment.failed') {
+      const payment = req.body.payload.payment.entity;
+      await PaymentOrderModel.updateOne(
+        { razorpayOrderId: payment.order_id },
+        { status: 'failed' }
+      );
     }
 
-    res.json({ success: true });
-
-  } catch (error) {
-    console.error('Webhook error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Webhook error', err);
+    res.status(500).json({ error: 'Webhook error' });
   }
 };

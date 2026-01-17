@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/edtech';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://crazyphoton150hs:ZNbDCoadKRyPZQUQ@cluster0.4mq6pjf.mongodb.net/?appName=Cluster0';
 
 export const connectDatabase = async (): Promise<void> => {
   try {

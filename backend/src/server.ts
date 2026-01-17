@@ -38,7 +38,17 @@ app.use(compression());
 app.use(morgan('combined'));
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
+app.use(
+  express.json({
+    limit: '10mb',
+    verify: (req: any, _res, buf) => {
+      if (req.originalUrl.includes('/payments/webhook')) {
+        req.rawBody = buf.toString();
+      }
+    }
+  })
+);
+
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static file serving for uploads with CORS headers - INSIDE the API prefix

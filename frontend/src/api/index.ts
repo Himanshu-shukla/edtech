@@ -282,6 +282,28 @@ export const verifyPayment = async (paymentData: {
   });
 };
 
+export const createPayPalOrder = async (orderData: {
+  courseId: string;
+  customerInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  couponCode?: string;
+}) => {
+  return apiRequest<any>('/payments/paypal/create-order', {
+    method: 'POST',
+    body: JSON.stringify(orderData)
+  });
+};
+
+export const capturePayPalPayment = async (paypalOrderId: string) => {
+  return apiRequest<any>('/payments/paypal/capture-payment', {
+    method: 'POST',
+    body: JSON.stringify({ paypalOrderId })
+  });
+};
+
 export const validateCoupon = async (couponCode: string, courseId: string) => {
   return apiRequest<any>(`/coupons/validate?code=${couponCode}&courseId=${courseId}`);
 };

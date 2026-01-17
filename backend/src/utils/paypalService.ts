@@ -1,31 +1,8 @@
-import checkoutNodeJssdk from '@paypal/checkout-server-sdk';
+import dotenv from 'dotenv';
 
-// PayPal environment configuration
-function environment() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const mode = process.env.PAYPAL_MODE || 'sandbox';
+dotenv.config();
 
-  if (!clientId || !clientSecret) {
-    throw new Error('PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET must be set in environment variables');
-  }
-
-  // Check for placeholder values
-  if (clientId === 'your-paypal-client-id' || clientSecret === 'your-paypal-client-secret') {
-    throw new Error('PayPal credentials are still set to placeholder values. Please update with actual PayPal app credentials.');
-  }
-
-  if (mode === 'live') {
-    return new checkoutNodeJssdk.core.LiveEnvironment(clientId, clientSecret);
-  } else {
-    return new checkoutNodeJssdk.core.SandboxEnvironment(clientId, clientSecret);
-  }
-}
-
-// PayPal client
-function client() {
-  return new checkoutNodeJssdk.core.PayPalHttpClient(environment());
-}
+// --- Types & Interfaces ---
 
 export interface PayPalOrderRequest {
   courseId: string;
@@ -50,20 +27,73 @@ export interface PayPalOrderResponse {
   }>;
 }
 
+interface PayPalAuthResponse {
+  access_token: string;
+  expires_in: number;
+  scope: string;
+  token_type: string;
+}
+
 export class PayPalService {
-  private client: any;
+  private clientId: string;
+  private clientSecret: string;
+  private baseUrl: string;
 
   constructor() {
-    this.client = client();
+    const mode = process.env.PAYPAL_MODE || 'sandbox';
+    
+    // Select credentials based on environment
+    if (mode === 'live') {
+      this.clientId = process.env.PAYPAL_CLIENT_ID_LIVE || '';
+      this.clientSecret = process.env.PAYPAL_CLIENT_SECRET_LIVE || '';
+      this.baseUrl = 'https://api-m.paypal.com';
+    } else {
+      this.clientId = process.env.PAYPAL_CLIENT_ID_SB || '';
+      this.clientSecret = process.env.PAYPAL_CLIENT_SECRET_SB || '';
+      this.baseUrl = 'https://api-m.sandbox.paypal.com';
+    }
+
+    if (!this.clientId || !this.clientSecret) {
+      throw new Error(`PayPal credentials missing for mode: ${mode}`);
+    }
   }
 
   /**
-   * Create a PayPal order
+   * Generate an access token using Client Credentials
+   */
+  private async getAccessToken(): Promise<string> {
+    const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Auth failed: ${errorText}`);
+      }
+
+      const data = await response.json() as PayPalAuthResponse;
+      return data.access_token;
+    } catch (error) {
+      console.error('PayPal Auth Error:', error);
+      throw new Error('Failed to authenticate with PayPal');
+    }
+  }
+
+  /**
+   * Create a PayPal order (V2 API)
    */
   async createOrder(orderData: PayPalOrderRequest): Promise<PayPalOrderResponse> {
-    const request = new checkoutNodeJssdk.orders.OrdersCreateRequest();
-    request.prefer("return=representation");
-    request.requestBody({
+    const accessToken = await this.getAccessToken();
+
+    const payload = {
       intent: 'CAPTURE',
       application_context: {
         brand_name: 'EdTech Informative',
@@ -79,35 +109,49 @@ export class PayPalService {
           currency_code: orderData.currency,
           value: orderData.amount.toFixed(2)
         },
-        payee: {
-          email_address: process.env.PAYPAL_MERCHANT_EMAIL || undefined
-        },
+        // Optional: Payee info is often inferred from client ID, but can be explicit
+        payee: process.env.PAYPAL_MERCHANT_EMAIL ? {
+            email_address: process.env.PAYPAL_MERCHANT_EMAIL
+        } : undefined,
         custom_id: orderData.courseId
       }],
+      // Only include payer info if strict requirements exist, otherwise PayPal collects this on their page
       payer: {
-        name: {
-          given_name: orderData.customerInfo.name.split(' ')[0] || orderData.customerInfo.name,
-          surname: orderData.customerInfo.name.split(' ').slice(1).join(' ') || ''
-        },
         email_address: orderData.customerInfo.email,
-        phone: {
-          phone_number: {
-            national_number: orderData.customerInfo.phone
-          }
+        name: {
+            given_name: orderData.customerInfo.name.split(' ')[0],
+            surname: orderData.customerInfo.name.split(' ').slice(1).join(' ') || undefined
         }
       }
-    });
+    };
 
     try {
-      const response = await this.client.execute(request);
+      const response = await fetch(`${this.baseUrl}/v2/checkout/orders`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('PayPal Order Creation Failed:', JSON.stringify(errorData, null, 2));
+        throw new Error('Failed to create PayPal order');
+      }
+
+      const result = await response.json() as any;
+      
       return {
-        id: response.result.id,
-        status: response.result.status,
-        links: response.result.links
+        id: result.id,
+        status: result.status,
+        links: result.links
       };
     } catch (error) {
       console.error('PayPal create order error:', error);
-      throw new Error('Failed to create PayPal order');
+      throw error;
     }
   }
 
@@ -115,15 +159,29 @@ export class PayPalService {
    * Capture payment for an approved PayPal order
    */
   async capturePayment(orderId: string): Promise<any> {
-    const request = new checkoutNodeJssdk.orders.OrdersCaptureRequest(orderId);
-    request.requestBody({});
+    const accessToken = await this.getAccessToken();
 
     try {
-      const response = await this.client.execute(request);
-      return response.result;
+      const response = await fetch(`${this.baseUrl}/v2/checkout/orders/${orderId}/capture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        // Empty body is required for capture
+        body: JSON.stringify({}) 
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Capture Failed:', JSON.stringify(errorData, null, 2));
+        throw new Error('Failed to capture PayPal payment');
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('PayPal capture payment error:', error);
-      throw new Error('Failed to capture PayPal payment');
+      throw error;
     }
   }
 
@@ -131,14 +189,25 @@ export class PayPalService {
    * Get order details from PayPal
    */
   async getOrderDetails(orderId: string): Promise<any> {
-    const request = new checkoutNodeJssdk.orders.OrdersGetRequest(orderId);
+    const accessToken = await this.getAccessToken();
 
     try {
-      const response = await this.client.execute(request);
-      return response.result;
+      const response = await fetch(`${this.baseUrl}/v2/checkout/orders/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get order details');
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error('PayPal get order details error:', error);
-      throw new Error('Failed to get PayPal order details');
+      console.error('PayPal get details error:', error);
+      throw error;
     }
   }
 
@@ -146,47 +215,64 @@ export class PayPalService {
    * Refund a captured payment
    */
   async refundPayment(captureId: string, amount?: { currency_code: string; value: string }): Promise<any> {
-    const request = new checkoutNodeJssdk.payments.CapturesRefundRequest(captureId);
-    
-    if (amount) {
-      request.requestBody({
-        amount: amount
-      });
-    } else {
-      request.requestBody({});
-    }
+    const accessToken = await this.getAccessToken();
+
+    const payload = amount ? { amount } : {};
 
     try {
-      const response = await this.client.execute(request);
-      return response.result;
+      const response = await fetch(`${this.baseUrl}/v2/payments/captures/${captureId}/refund`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refund payment');
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error('PayPal refund payment error:', error);
-      throw new Error('Failed to refund PayPal payment');
+      console.error('PayPal refund error:', error);
+      throw error;
     }
   }
 
   /**
-   * Verify webhook signature (for webhook events)
+   * Verify webhook signature
+   * Note: This uses the API endpoint to verify signatures, replacing the old SDK method.
    */
   async verifyWebhookSignature(
     headers: any,
-    body: string,
+    body: string, // Raw string body is required
     webhookId: string
   ): Promise<boolean> {
+    const accessToken = await this.getAccessToken();
+
     try {
-      const request = new checkoutNodeJssdk.notifications.VerifyWebhookSignatureRequest();
-      request.requestBody({
+      const payload = {
         auth_algo: headers['paypal-auth-algo'],
-        cert_id: headers['paypal-cert-id'],
+        cert_url: headers['paypal-cert-url'], // Note: API expects 'cert_url', SDK used 'cert_id' sometimes
         transmission_id: headers['paypal-transmission-id'],
         transmission_sig: headers['paypal-transmission-sig'],
         transmission_time: headers['paypal-transmission-time'],
         webhook_id: webhookId,
         webhook_event: JSON.parse(body)
+      };
+
+      const response = await fetch(`${this.baseUrl}/v1/notifications/verify-webhook-signature`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
       });
 
-      const response = await this.client.execute(request);
-      return response.result.verification_status === 'SUCCESS';
+      const result = await response.json() as any;
+      return result.verification_status === 'SUCCESS';
     } catch (error) {
       console.error('PayPal webhook verification error:', error);
       return false;
