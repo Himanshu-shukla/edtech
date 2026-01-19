@@ -1,9 +1,49 @@
-// import FloatingDots from "../FloatingDots";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight, Mail, ExternalLink } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 import WhiteLogo from "../assets/WHITE-LOGO--300x152.png";
 import { getCoursesData, getCompanyInfoData } from "../utils/dataAdapter";
 import type { Course, CompanyInfo } from "../types";
+
+// --- Utility ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+// --- Components ---
+
+const SocialLink = ({ href, icon, label, colorClass }: { href: string, icon: React.ReactNode, label: string, colorClass: string }) => (
+  <motion.a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={label}
+    whileHover={{ y: -3, scale: 1.1 }}
+    whileTap={{ scale: 0.95 }}
+    className={cn(
+      "w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 transition-all duration-300 shadow-lg",
+      colorClass
+    )}
+  >
+    {icon}
+  </motion.a>
+);
+
+const FooterLink = ({ to, children }: { to: string, children: React.ReactNode }) => (
+  <motion.li whileHover={{ x: 5 }}>
+    <Link 
+      to={to} 
+      className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-2 group"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 group-hover:bg-emerald-500 transition-colors" />
+      {children}
+    </Link>
+  </motion.li>
+);
 
 export default function Footer() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -20,143 +60,140 @@ export default function Footer() {
         setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error loading data:', error);
-        setCourses([]);
-        setCompanyInfo(null);
       }
     };
-
     loadData();
   }, []);
 
-  // Get first 4 courses for footer display
   const footerCourses = courses.slice(0, 4);
-
-  // Helper function to convert text to title case
-  const toTitleCase = (str: string) => {
-    return str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
-  };
+  const toTitleCase = (str: string) => str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
-    <footer id="contact" className="pt-10 pb-2 border-t border-white/10 relative overflow-hidden">
-      {/* <FloatingDots numDots={80} className="opacity-75 -z-10" /> */}
-      <div className="mx-auto max-w-7xl px-6">
-        {/* Main Footer Content */}
-        <div className="grid md:grid-cols-4 gap-8 mb-12">
-          <div className="md:col-span-2">
-            <img src={WhiteLogo} alt="EdTech Informative" className="h-10 w-auto mb-4" />
-            <p className="text-white/80 text-lg mb-6 max-w-md leading-relaxed">
-              Transform your career with <span className="text-edtech-green font-semibold">cutting-edge tech skills</span>. Your gateway to <span className="text-edtech-orange font-semibold">future‑ready careers</span> in Data, AI, and Cloud technologies.
-            </p>
-            <div className="flex flex-col gap-6">
-              <div className="flex gap-4">
-                <Link to="/programs" className="cta cta-primary">
-                  Start Learning Today
-                </Link>
-                <Link to="/contact" className="cta cta-secondary">
-                  Contact Us
-                </Link>
-              </div>
-              
-              {/* Social Media Icons */}
-              {companyInfo?.socialMedia && (
-                <div className="flex items-center gap-6">
-                  <span className="text-white/60 text-sm font-medium">Follow us:</span>
-                  <div className="flex gap-4">
-                    {companyInfo.socialMedia.facebook && (
-                      <a 
-                        href={companyInfo.socialMedia.facebook} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-blue-600 transition-all duration-300 hover:scale-110"
-                        aria-label="Follow us on Facebook"
-                      >
-                        <svg className="w-5 h-5 text-white group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                      </a>
-                    )}
-                    
-                    {companyInfo.socialMedia.instagram && (
-                      <a 
-                        href={companyInfo.socialMedia.instagram} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-purple-500 hover:via-pink-500 hover:to-yellow-500 transition-all duration-300 hover:scale-110"
-                        aria-label="Follow us on Instagram"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2476 2476" className="w-5 h-5 text-white group-hover:text-white" fill="currentColor">
-                          <path d="M825.4 1238c0-227.9 184.7-412.7 412.6-412.7 227.9 0 412.7 184.8 412.7 412.7 0 227.9-184.8 412.7-412.7 412.7-227.9 0-412.6-184.8-412.6-412.7m-223.1 0c0 351.1 284.6 635.7 635.7 635.7s635.7-284.6 635.7-635.7-284.6-635.7-635.7-635.7S602.3 886.9 602.3 1238m1148-660.9c0 82 66.5 148.6 148.6 148.6 82 0 148.6-66.6 148.6-148.6s-66.5-148.5-148.6-148.5-148.6 66.5-148.6 148.5M737.8 2245.7c-120.7-5.5-186.3-25.6-229.9-42.6-57.8-22.5-99-49.3-142.4-92.6-43.3-43.3-70.2-84.5-92.6-142.3-17-43.6-37.1-109.2-42.6-229.9-6-130.5-7.2-169.7-7.2-500.3s1.3-369.7 7.2-500.3c5.5-120.7 25.7-186.2 42.6-229.9 22.5-57.8 49.3-99 92.6-142.4 43.3-43.3 84.5-70.2 142.4-92.6 43.6-17 109.2-37.1 229.9-42.6 130.5-6 169.7-7.2 500.2-7.2 330.6 0 369.7 1.3 500.3 7.2 120.7 5.5 186.2 25.7 229.9 42.6 57.8 22.4 99 49.3 142.4 92.6 43.3 43.3 70.1 84.6 92.6 142.4 17 43.6 37.1 109.2 42.6 229.9 6 130.6 7.2 169.7 7.2 500.3 0 330.5-1.2 369.7-7.2 500.3-5.5 120.7-25.7 186.3-42.6 229.9-22.5 57.8-49.3 99-92.6 142.3-43.3 43.3-84.6 70.1-142.4 92.6-43.6 17-109.2 37.1-229.9 42.6-130.5 6-169.7 7.2-500.3 7.2-330.5 0-369.7-1.2-500.2-7.2M727.6 7.5c-131.8 6-221.8 26.9-300.5 57.5-81.4 31.6-150.4 74-219.3 142.8C139 276.6 96.6 345.6 65 427.1 34.4 505.8 13.5 595.8 7.5 727.6 1.4 859.6 0 901.8 0 1238s1.4 378.4 7.5 510.4c6 131.8 26.9 221.8 57.5 300.5 31.6 81.4 73.9 150.5 142.8 219.3 68.8 68.8 137.8 111.1 219.3 142.8 78.8 30.6 168.7 51.5 300.5 57.5 132.1 6 174.2 7.5 510.4 7.5 336.3 0 378.4-1.4 510.4-7.5 131.8-6 221.8-26.9 300.5-57.5 81.4-31.7 150.4-74 219.3-142.8 68.8-68.8 111.1-137.9 142.8-219.3 30.6-78.7 51.6-168.7 57.5-300.5 6-132.1 7.4-174.2 7.4-510.4s-1.4-378.4-7.4-510.4c-6-131.8-26.9-221.8-57.5-300.5-31.7-81.4-74-150.4-142.8-219.3C2199.4 139 2130.3 96.6 2049 65c-78.8-30.6-168.8-51.6-300.5-57.5-132-6-174.2-7.5-510.4-7.5-336.3 0-378.4 1.4-510.5 7.5"/>
-                        </svg>
-                      </a>
-                    )}
-                    
-                    {companyInfo.socialMedia.linkedin && (
-                      <a 
-                        href={companyInfo.socialMedia.linkedin} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-blue-700 transition-all duration-300 hover:scale-110"
-                        aria-label="Follow us on LinkedIn"
-                      >
-                        <svg className="w-5 h-5 text-white group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+    <footer className="relative bg-zinc-950 pt-20 pb-10 overflow-hidden border-t border-white/5">
+      
+      {/* --- Background Decor --- */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+      <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        
+        {/* --- Main Content Grid --- */}
+        <div className="grid md:grid-cols-12 gap-12 mb-16">
           
-          <div>
-            <h4 className="font-bold text-white mb-4 text-lg">Programs</h4>
-            <ul className="space-y-3 text-white/70">
+          {/* Column 1: Brand & CTA (Span 5) */}
+          <div className="md:col-span-5 space-y-8">
+            <Link to="/" className="block">
+              <img src={WhiteLogo} alt="EdTech Informative" className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+            </Link>
+            
+            <p className="text-zinc-400 text-lg leading-relaxed max-w-md">
+              Transform your career with <span className="text-emerald-400 font-medium">cutting-edge tech skills</span>. 
+              Your gateway to <span className="text-orange-400 font-medium">future‑ready careers</span> in Data, AI, and Cloud.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link 
+                to="/programs" 
+                className="group relative overflow-hidden px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Start Learning <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
+              </Link>
+              
+              <Link 
+                to="/contact" 
+                className="px-6 py-3 rounded-xl border border-zinc-700 text-white font-medium text-sm hover:bg-zinc-800 transition-colors flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" /> Contact Us
+              </Link>
+            </div>
+
+            {/* Socials */}
+            {companyInfo?.socialMedia && (
+              <div className="pt-4">
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Follow Our Journey</p>
+                <div className="flex gap-3">
+                  {companyInfo.socialMedia.facebook && (
+                    <SocialLink 
+                      href={companyInfo.socialMedia.facebook} 
+                      label="Facebook"
+                      colorClass="hover:border-blue-500/50 hover:text-blue-500 hover:shadow-blue-500/20"
+                      icon={<svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>}
+                    />
+                  )}
+                  {companyInfo.socialMedia.instagram && (
+                    <SocialLink 
+                      href={companyInfo.socialMedia.instagram} 
+                      label="Instagram"
+                      colorClass="hover:border-pink-500/50 hover:text-pink-500 hover:shadow-pink-500/20"
+                      icon={<svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>}
+                    />
+                  )}
+                  {companyInfo.socialMedia.linkedin && (
+                    <SocialLink 
+                      href={companyInfo.socialMedia.linkedin} 
+                      label="LinkedIn"
+                      colorClass="hover:border-blue-600/50 hover:text-blue-600 hover:shadow-blue-600/20"
+                      icon={<svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Column 2: Programs (Span 3) */}
+          <div className="md:col-span-3 md:pl-8">
+            <h4 className="text-white font-bold text-lg mb-6">Programs</h4>
+            <ul className="space-y-4">
               {footerCourses.map((course) => (
-                <li key={course.id}>
-                  <Link to={`/program/${course.id}`} className="hover:text-edtech-orange transition-colors font-medium">
-                    {course.title.length > 25 ? toTitleCase(course.category) : toTitleCase(course.title)}
-                  </Link>
-                </li>
+                <FooterLink key={course.id} to={`/program/${course.id}`}>
+                  {course.title.length > 25 ? toTitleCase(course.category) : toTitleCase(course.title)}
+                </FooterLink>
               ))}
-              <li><Link to="/programs" className="hover:text-edtech-green transition-colors font-medium">View All Programs</Link></li>
+              <li className="pt-2">
+                <Link to="/programs" className="text-emerald-400 text-sm font-semibold hover:text-emerald-300 flex items-center gap-1">
+                  View All Programs <ArrowRight className="w-3 h-3" />
+                </Link>
+              </li>
             </ul>
           </div>
+
+          {/* Column 3: Company (Span 4) */}
+          <div className="md:col-span-4">
+            <h4 className="text-white font-bold text-lg mb-6">Company</h4>
+            <ul className="space-y-4">
+              <FooterLink to="/about">About Us</FooterLink>
+              <FooterLink to="/pricing">Pricing & Plans</FooterLink>
+              <FooterLink to="/contact">Contact Support</FooterLink>
+              <li className="pt-4 border-t border-zinc-800 mt-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-zinc-500 text-sm">System Status: <span className="text-emerald-500 font-medium">Operational</span></span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* --- Bottom Bar --- */}
+        <div className="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-zinc-500 text-sm text-center md:text-left">
+            © {new Date().getFullYear()} EdTech Informative. All rights reserved.
+          </p>
           
-          <div>
-            <h4 className="font-bold text-white mb-4 text-lg">Company</h4>
-            <ul className="space-y-3 text-white/70">
-              <li><Link to="/about" className="hover:text-edtech-orange transition-colors font-medium">About Us</Link></li>
-              {/* <li><Link to="/blog" className="hover:text-edtech-orange transition-colors font-medium">Blog</Link></li> */}
-              <li><Link to="/pricing" className="hover:text-edtech-orange transition-colors font-medium">Pricing</Link></li>
-              <li><Link to="/contact" className="hover:text-edtech-orange transition-colors font-medium">Contact</Link></li>
-     </ul>
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-zinc-500 font-medium">
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="pt-8 border-t border-white/10">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-white/60 text-sm">
-              © 2025 EdTech Informative. All rights reserved.
-            </div>
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <Link to="/privacy-policy" className="hover:text-edtech-orange transition-colors">
-                Privacy Policy
-              </Link>
-              <span>|</span>
-              <Link to="/refund-policy" className="hover:text-edtech-orange transition-colors">
-                Refund Policy
-              </Link>
-              <span>|</span>
-              <Link to="/terms-of-service" className="hover:text-edtech-orange transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </footer>
   );
 }
-

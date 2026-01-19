@@ -118,7 +118,7 @@ export default function AdvantageStats() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {advantageStats.length === 0 ? (
               <div className="col-span-full text-center text-gray-600">
                 No stats available at the moment.
@@ -163,7 +163,7 @@ export default function AdvantageStats() {
               </div>
               ))
             )}
-          </div>
+          </div> */}
         </div>
       </section>
     </>

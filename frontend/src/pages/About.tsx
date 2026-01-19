@@ -238,7 +238,7 @@ export default function AboutPage() {
         </section>
 
         {/* --- ADVANTAGE STATS --- */}
-        <AdvantageStats />
+        {/* <AdvantageStats /> */}
 
         {/* --- TIMELINE JOURNEY --- */}
         <section className="py-24 relative">
