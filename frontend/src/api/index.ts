@@ -211,19 +211,29 @@ export const getIconsData = async () => {
 
 // ===== CONTACT FORM APIs =====
 
-export const submitContactForm = async (data: {
+
+export async function submitContactForm(payload: {
   name: string;
   email: string;
   phone: string;
-  subject?: string;
-  message?: string;
-  source?: string;
-}) => {
-  return apiRequest<any>('/contact/submit', {
-    method: 'POST',
-    body: JSON.stringify(data)
+  subject: string;
+  message: string;
+  source: string;
+}) {
+  const response = await fetch("/api/contact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
   });
-};
+
+  if (!response.ok) {
+    throw new Error("Failed to submit contact form");
+  }
+
+  return await response.json();
+}
 
 export const submitStrategyCall = async (data: {
   name: string;
