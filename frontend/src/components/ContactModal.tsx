@@ -98,7 +98,7 @@ export default function ContactModal({
                 id="name"
                 name="name"
                 required
-                value={formData.name}
+                value={formData.name ?? ""}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
                 placeholder="Enter your full name"
@@ -115,7 +115,7 @@ export default function ContactModal({
                 id="email"
                 name="email"
                 required
-                value={formData.email}
+                value={formData.email ?? ""}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
                 placeholder="Enter your email address"
@@ -132,7 +132,7 @@ export default function ContactModal({
                 id="phone"
                 name="phone"
                 required
-                value={formData.phone}
+                value={formData.phone ?? ""}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
                 placeholder="Enter your phone number"

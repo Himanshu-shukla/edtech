@@ -43,7 +43,7 @@ const InputGroup = ({
         id={id}
         name={id}
         required={required}
-        value={value}
+        value={value ?? ""}
         onChange={onChange}
         placeholder={placeholder}
         className="w-full bg-zinc-900/50 border border-zinc-800 text-white rounded-xl py-2.5 pl-10 pr-4 outline-none placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all duration-300"
@@ -151,7 +151,7 @@ export default function CourseEnrollmentModal({
                 label="Full Name"
                 icon={User}
                 placeholder="John Doe"
-                value={formData.name}
+                value={formData.name ?? ""}
                 onChange={handleInputChange}
                 required
               />
