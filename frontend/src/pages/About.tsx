@@ -4,52 +4,25 @@ import {
   motion,
   useScroll,
   useSpring,
-  useMotionTemplate,
-  useMotionValue,
 } from "framer-motion";
 import type { Variants } from "framer-motion";
-import {
-  Target,
-  Eye,
-  Rocket,
-  ArrowRight,
-  CheckCircle2,
-  Linkedin,
-  Twitter,
-  Sparkles,
-  Globe,
-  Heart,
-  Zap,
-} from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AdvantageStats from "../components/AdvantageStats";
 import MentorProfiles from "../components/MentorProfiles";
 import { getAboutPageData } from "../utils/dataAdapter";
-import type { TeamMember, Value, Stat, Milestone } from "../types";
-
-/* ---------------------------------- Utils --------------------------------- */
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import type { Value, Stat, Milestone } from "../types";
 
 /* ---------------------------- Motion Variants ------------------------------ */
 
 const fadeInUp: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-  },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.6, ease: "easeOut" },
   },
 };
 
@@ -57,58 +30,12 @@ const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
-/* ------------------------- Spotlight Card Component ------------------------- */
-function SpotlightCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+/* ----------------------------- Section Header ------------------------------ */
 
-  function handleMouseMove(
-    event: React.MouseEvent<HTMLDivElement>
-  ) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    mouseX.set(event.clientX - rect.left);
-    mouseY.set(event.clientY - rect.top);
-  }
-
-  return (
-    <div
-      onMouseMove={handleMouseMove}
-      className={cn(
-        "group relative rounded-3xl border border-zinc-800 bg-zinc-900/50 overflow-hidden",
-        className
-      )}
-    >
-      <motion.div
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300"
-        style={{
-          background: useMotionTemplate`
-            radial-gradient(
-              600px circle at ${mouseX}px ${mouseY}px,
-              rgba(16,185,129,0.15),
-              transparent 80%
-            )
-          `,
-        }}
-      />
-      <div className="relative">{children}</div>
-    </div>
-  );
-}
-
-/* ----------------------------- Section Header ------------------------------- */
 const SectionHeader = ({
   badge,
   title,
@@ -150,9 +77,9 @@ const SectionHeader = ({
   </div>
 );
 
-/* ------------------------------- Main Page --------------------------------- */
+/* ------------------------------- Page ------------------------------------- */
+
 export default function AboutPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [values, setValues] = useState<Value[]>([]);
   const [stats, setStats] = useState<Stat[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -169,16 +96,10 @@ export default function AboutPage() {
     damping: 30,
   });
 
-  const getImageUrl = (filename?: string) =>
-    filename
-      ? `${import.meta.env.VITE_API_BASE_URL}/uploads/team-images/${filename}`
-      : "";
-
   useEffect(() => {
     const load = async () => {
       try {
         const data = await getAboutPageData();
-        setTeamMembers(data.teamMembers);
         setValues(data.companyValues);
         setStats(data.aboutStats);
         setMilestones(data.companyMilestones);

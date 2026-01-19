@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from 'react-hot-toast';
 import { 
   Search, Filter, BookOpen, Clock, BarChart, 
-  Sparkles, GraduationCap, ChevronRight, CheckCircle2 
+  Sparkles, ChevronRight, CheckCircle2 
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";

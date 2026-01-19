@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Building2, Users, Sparkles } from 'lucide-react';
+import { Briefcase, Building2, Users } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getMentorsData, getPartnerCompaniesData } from '../utils/dataAdapter';
