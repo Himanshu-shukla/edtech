@@ -1,226 +1,200 @@
 import { Request, Response, NextFunction } from 'express';
-import multer from 'multer';
+import multer, { FileFilterCallback, StorageEngine } from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 
-// Define allowed mime types
-const ALLOWED_IMAGE_MIMETYPES = [
-  'image/jpeg', 
-  'image/png', 
-  'image/webp', 
+/* ──────────────────────────────────────────────── */
+/* CONFIG                                           */
+/* ──────────────────────────────────────────────── */
+
+const ALLOWED_IMAGE_MIMETYPES: readonly string[] = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
   'image/gif'
 ];
 
-// Create upload directories if they don't exist
-const createUploadDirectories = () => {
-  const baseDir = path.join(__dirname, '../../../uploads');
-  const blogImagesDir = path.join(baseDir, 'blog-images');
-  const teamImagesDir = path.join(baseDir, 'team-images');
-  const courseImagesDir = path.join(baseDir, 'course-images');
-  const testimonialImagesDir = path.join(baseDir, 'testimonial-images');
-  const trustpilotImagesDir = path.join(baseDir, 'trustpilot-images');
-  
-  if (!fs.existsSync(baseDir)) {
-    fs.mkdirSync(baseDir, { recursive: true });
-  }
-  if (!fs.existsSync(blogImagesDir)) {
-    fs.mkdirSync(blogImagesDir, { recursive: true });
-  }
-  if (!fs.existsSync(teamImagesDir)) {
-    fs.mkdirSync(teamImagesDir, { recursive: true });
-  }
-  if (!fs.existsSync(courseImagesDir)) {
-    fs.mkdirSync(courseImagesDir, { recursive: true });
-  }
-  if (!fs.existsSync(testimonialImagesDir)) {
-    fs.mkdirSync(testimonialImagesDir, { recursive: true });
-  }
-  if (!fs.existsSync(trustpilotImagesDir)) {
-    fs.mkdirSync(trustpilotImagesDir, { recursive: true });
-  }
-  return { baseDir, blogImagesDir, teamImagesDir, courseImagesDir, testimonialImagesDir, trustpilotImagesDir };
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/* ──────────────────────────────────────────────── */
+/* DIRECTORY SETUP                                  */
+/* ──────────────────────────────────────────────── */
+
+const BASE_UPLOAD_DIR = path.resolve(__dirname, '../../../uploads');
+
+const DIRS = {
+  blog: path.join(BASE_UPLOAD_DIR, 'blog-images'),
+  team: path.join(BASE_UPLOAD_DIR, 'team-images'),
+  course: path.join(BASE_UPLOAD_DIR, 'course-images'),
+  testimonial: path.join(BASE_UPLOAD_DIR, 'testimonial-images'),
+  trustpilot: path.join(BASE_UPLOAD_DIR, 'trustpilot-images')
+} as const;
+
+const ensureDirectoriesExist = (): void => {
+  Object.values(DIRS).forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
 };
 
-// Create directories
-const { blogImagesDir, teamImagesDir, courseImagesDir, testimonialImagesDir, trustpilotImagesDir } = createUploadDirectories();
+ensureDirectoriesExist();
 
-// Configure storage for blog images
-const blogStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Store blog images in the blog-images directory
-    cb(null, blogImagesDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate a unique filename using a timestamp and random hash
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const fileExt = path.extname(file.originalname).toLowerCase();
-    cb(null, `blog-${uniqueSuffix}${fileExt}`);
-  }
-});
+/* ──────────────────────────────────────────────── */
+/* HELPERS                                          */
+/* ──────────────────────────────────────────────── */
 
-// Configure storage for team member images
-const teamStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Store team member images in the team-images directory
-    cb(null, teamImagesDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate a unique filename using a timestamp and random hash
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const fileExt = path.extname(file.originalname).toLowerCase();
-    cb(null, `team-${uniqueSuffix}${fileExt}`);
-  }
-});
+const generateFilename = (prefix: string, originalName: string): string => {
+  const ext = path.extname(originalName).toLowerCase();
+  const random = crypto.randomBytes(6).toString('hex');
+  return `${prefix}-${Date.now()}-${random}${ext}`;
+};
 
-// Configure storage for course images
-const courseStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, courseImagesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const fileExt = path.extname(file.originalname).toLowerCase();
-    cb(null, `course-${uniqueSuffix}${fileExt}`);
-  }
-});
+const createStorage = (dir: string, prefix: string): StorageEngine =>
+  multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, dir);
+    },
+    filename: (_req, file, cb) => {
+      cb(null, generateFilename(prefix, file.originalname));
+    }
+  });
 
-// Configure storage for testimonial images
-const testimonialStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, testimonialImagesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const fileExt = path.extname(file.originalname).toLowerCase();
-    cb(null, `testimonial-${uniqueSuffix}${fileExt}`);
-  }
-});
+/* ──────────────────────────────────────────────── */
+/* FILE FILTER                                      */
+/* ──────────────────────────────────────────────── */
 
-// Configure storage for trustpilot images
-const trustpilotStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, trustpilotImagesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const fileExt = path.extname(file.originalname).toLowerCase();
-    cb(null, `trustpilot-${uniqueSuffix}${fileExt}`);
-  }
-});
-
-// Create file filter to validate uploads
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Check if the file type is in our allowed list
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback
+): void => {
   if (ALLOWED_IMAGE_MIMETYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`Unsupported file type. Allowed types: ${ALLOWED_IMAGE_MIMETYPES.join(', ')}`));
+    cb(
+      new Error(
+        `Unsupported file type. Allowed: ${ALLOWED_IMAGE_MIMETYPES.join(', ')}`
+      )
+    );
   }
 };
 
-// Create the multer instances with configuration
-const blogUpload = multer({
-  storage: blogStorage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  }
-});
+/* ──────────────────────────────────────────────── */
+/* MULTER INSTANCES                                 */
+/* ──────────────────────────────────────────────── */
 
-const teamUpload = multer({
-  storage: teamStorage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  }
-});
-const courseUpload = multer({
-  storage: courseStorage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  }
-});
+const createUploader = (storage: StorageEngine) =>
+  multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: MAX_FILE_SIZE }
+  });
 
-const testimonialUpload = multer({
-  storage: testimonialStorage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  }
-});
+const blogUpload = createUploader(createStorage(DIRS.blog, 'blog'));
+const teamUpload = createUploader(createStorage(DIRS.team, 'team'));
+const courseUpload = createUploader(createStorage(DIRS.course, 'course'));
+const testimonialUpload = createUploader(
+  createStorage(DIRS.testimonial, 'testimonial')
+);
+const trustpilotUpload = createUploader(
+  createStorage(DIRS.trustpilot, 'trustpilot')
+);
 
-const trustpilotUpload = multer({
-  storage: trustpilotStorage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  }
-});
+/* ──────────────────────────────────────────────── */
+/* ERROR HANDLER                                    */
+/* ──────────────────────────────────────────────── */
 
-
-// Middleware to handle file upload errors
-export const handleUploadError = (err: any, req: Request, res: Response, next: NextFunction): void => {
+export const handleUploadError = (
+  err: unknown,
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 5MB.'
+        message: 'File too large. Maximum allowed size is 5MB.'
       });
       return;
     }
+
     res.status(400).json({
       success: false,
       message: `Upload error: ${err.message}`
     });
     return;
   }
-  
-  if (err) {
+
+  if (err instanceof Error) {
     res.status(400).json({
       success: false,
       message: err.message
     });
     return;
   }
-  
+
   next();
 };
 
-// Export the configured upload middleware for different purposes
+/* ──────────────────────────────────────────────── */
+/* EXPORTS                                          */
+/* ──────────────────────────────────────────────── */
+
+// Blog
 export const uploadBlogImage = blogUpload.single('image');
 
-// For multiple file uploads (featured image + avatar)
 export const uploadBlogImages = blogUpload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'avatarImage', maxCount: 1 }
 ]);
 
-// For team member image uploads
+// Team
 export const uploadTeamImage = teamUpload.single('image');
 
-// For course image uploads
+// Course
 export const uploadCourseImage = courseUpload.single('image');
 
-// For testimonial image uploads
-export const uploadTestimonialImage = testimonialUpload.single('image');
+// Testimonial
+export const uploadTestimonialImage =
+  testimonialUpload.single('image');
 
-// For trustpilot image uploads
-export const uploadTrustpilotImage = trustpilotUpload.single('image');
+// Trustpilot
+export const uploadTrustpilotImage =
+  trustpilotUpload.single('image');
 
-// Helper function to get the public URL for an image
-export const getImageUrl = (filename: string, req: Request, type: 'blog' | 'team' | 'course' | 'testimonial' | 'trustpilot' = 'blog'): string => {
+/* ──────────────────────────────────────────────── */
+/* URL HELPER                                       */
+/* ──────────────────────────────────────────────── */
+
+export type ImageType =
+  | 'blog'
+  | 'team'
+  | 'course'
+  | 'testimonial'
+  | 'trustpilot';
+
+export const getImageUrl = (
+  filename: string,
+  req: Request,
+  type: ImageType = 'blog'
+): string => {
   if (!filename) return '';
-  if (filename.startsWith('http')) {
-    return filename;
-  }
+
+  if (filename.startsWith('http')) return filename;
+
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   const apiPrefix = process.env.API_PREFIX || '/api';
-  let folder = 'blog-images';
-  if (type === 'team') folder = 'team-images';
-  if (type === 'course') folder = 'course-images';
-  if (type === 'testimonial') folder = 'testimonial-images';
-  if (type === 'trustpilot') folder = 'trustpilot-images';
-  return `${baseUrl}${apiPrefix}/uploads/${folder}/${filename}`;
+
+  const folderMap: Record<ImageType, string> = {
+    blog: 'blog-images',
+    team: 'team-images',
+    course: 'course-images',
+    testimonial: 'testimonial-images',
+    trustpilot: 'trustpilot-images'
+  };
+
+  return `${baseUrl}${apiPrefix}/uploads/${folderMap[type]}/${filename}`;
 };

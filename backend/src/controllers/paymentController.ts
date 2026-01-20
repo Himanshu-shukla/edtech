@@ -877,15 +877,16 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     if (event === 'payment.failed') {
       const payment = req.body.payload.payment.entity;
+
       await PaymentOrderModel.updateOne(
         { razorpayOrderId: payment.order_id },
         { status: 'failed' }
       );
     }
 
-    res.json({ received: true });
+    return res.status(200).json({ received: true });
   } catch (err) {
     console.error('Webhook error', err);
-    res.status(500).json({ error: 'Webhook error' });
+    return res.status(500).json({ error: 'Webhook error' });
   }
 };
