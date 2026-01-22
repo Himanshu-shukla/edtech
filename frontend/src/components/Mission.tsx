@@ -18,21 +18,21 @@ const desktopImages = [
     id: 1,
     title: "Continuous Feedback",
     desc: "Personalized insights to accelerate your growth.",
-    src: 'https://thinkwht.in/wp-content/uploads/2025/10/Students-feedback.webp',
+    src: '../src/assets/Mithilesh Kumar — Business Analyst “The program gave me strong practical exposure with real-world case studies. The mentors were supportive and the curriculum was well structured, helping me build.jpg',
     color: "from-blue-500 to-cyan-500"
   },
   {
     id: 2,
     title: "Expert Mentorship",
     desc: "1-on-1 guidance from industry veterans.",
-    src: 'https://thinkwht.in/wp-content/uploads/2025/10/Mentor-Video.webp',
+    src: `../src/assets/Rakul Mehta - Senior Data Scientist, Microsoft The mentor's video session gave me real insights into industry practices. His practical tips and guidance were easy to apply and boosted my confidenc.png`,
     color: "from-emerald-500 to-green-500"
   },
   {
     id: 3,
     title: "Global Certification",
     desc: "Credentials that validate your expertise worldwide.",
-    src: 'https://thinkwht.in/wp-content/uploads/2025/10/Certification.webp',
+    src: '../src/assets/Earn Industry-Recognized Certifications Validate your skills with credentials that boost your career and open global opportunities.jpg',
     color: "from-orange-500 to-red-500"
   },
   {
