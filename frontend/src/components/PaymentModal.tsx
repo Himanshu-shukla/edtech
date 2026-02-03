@@ -81,7 +81,6 @@ export default function PaymentModal({
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '', phone: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  // Updated state to include 'paylater'
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'paypal' | 'paylater'>('razorpay');
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
 
@@ -147,6 +146,40 @@ export default function PaymentModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Shared Helper for Creating PayPal Order
+  const createOrderHandler = async () => {
+    try {
+      const response = await createPayPalOrder({
+        courseId: course.id,
+        customerInfo,
+        couponCode: appliedCoupon?.coupon?.code
+      });
+      
+      if (!response.success || !response.order?.id) {
+         throw new Error(response.error || 'Initialization failed');
+      }
+      return response.order.id;
+    } catch (error: any) {
+      toast.error(`Order Error: ${error.message}`);
+      throw error;
+    }
+  };
+
+  // Shared Helper for Approving PayPal Order
+  const onApproveHandler = async (data: any) => {
+    try {
+      const response = await capturePayPalPayment(data.orderID);
+      if (response.success) {
+        toast.success(`Enrolled Successfully!`);
+        onClose();
+      } else {
+        toast.error('Payment capture failed. Please try again.');
+      }
+    } catch (error: any) {
+      toast.error('Transaction failed.');
+    }
+  };
+
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
     try {
@@ -189,40 +222,6 @@ export default function PaymentModal({
     } catch (error: any) {
       toast.error(error.message || 'Payment failed');
       setIsProcessing(false);
-    }
-  };
-
-  // Helper function for PayPal Order Creation (Reused for both Standard & PayLater)
-  const createPayPalOrderHandler = async () => {
-    try {
-      const response = await createPayPalOrder({
-        courseId: course.id,
-        customerInfo,
-        couponCode: appliedCoupon?.coupon?.code
-      });
-      
-      if (!response.success || !response.order?.id) {
-         throw new Error(response.error || 'Initialization failed');
-      }
-      return response.order.id;
-    } catch (error: any) {
-      toast.error(`Order Error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  // Helper for PayPal Approval (Reused)
-  const onApproveHandler = async (data: any) => {
-    try {
-      const response = await capturePayPalPayment(data.orderID);
-      if (response.success) {
-        toast.success(`Enrolled Successfully!`);
-        onClose();
-      } else {
-        toast.error('Payment capture failed. Please try again.');
-      }
-    } catch (error: any) {
-      toast.error('Transaction failed.');
     }
   };
 
@@ -286,8 +285,7 @@ export default function PaymentModal({
 
               <div className="p-6 pt-2 min-h-[400px]">
                 <AnimatePresence mode="wait">
-                  
-                  {/* --- STEP 1: Details --- */}
+                  {/* STEP 1: Details */}
                   {currentStep === 1 && (
                     <motion.div
                       key="step1"
@@ -348,7 +346,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* --- STEP 2: Method (UPDATED) --- */}
+                  {/* STEP 2: Method */}
                   {currentStep === 2 && (
                     <motion.div
                       key="step2"
@@ -358,7 +356,7 @@ export default function PaymentModal({
                       className="space-y-6"
                     >
                       <div className="space-y-3">
-                        {/* Option 1: Razorpay */}
+                        {/* 1. Razorpay */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('razorpay')}
                           className={cn(
@@ -371,7 +369,7 @@ export default function PaymentModal({
                           {selectedPaymentMethod === 'razorpay' && <CheckCircle2 className="ml-auto w-5 h-5 text-orange-500" />}
                         </div>
 
-                        {/* Option 2: PayPal Standard */}
+                        {/* 2. PayPal Standard */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paypal')}
                           className={cn(
@@ -384,7 +382,7 @@ export default function PaymentModal({
                           {selectedPaymentMethod === 'paypal' && <CheckCircle2 className="ml-auto w-5 h-5 text-yellow-500" />}
                         </div>
 
-                        {/* Option 3: PayPal Pay Later */}
+                        {/* 3. PayPal Pay Later */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paylater')}
                           className={cn(
@@ -412,7 +410,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* --- STEP 3: Confirm (LOGIC SPLIT) --- */}
+                  {/* STEP 3: Confirm (Logic Branching) */}
                   {currentStep === 3 && (
                     <motion.div
                       key="step3"
@@ -426,7 +424,7 @@ export default function PaymentModal({
                         <h3 className="text-5xl font-bold text-white">£{finalPrice}</h3>
                       </div>
 
-                      <div className="min-h-[60px]">
+                      <div className="min-h-[120px]">
                         {/* CASE 1: RAZORPAY */}
                         {selectedPaymentMethod === 'razorpay' && (
                           <button
@@ -439,44 +437,34 @@ export default function PaymentModal({
                           </button>
                         )}
 
-                        {/* CASE 2: PAYPAL STANDARD */}
-                        {selectedPaymentMethod === 'paypal' && (
-                          <div className="relative z-10 w-full min-h-[60px]">
+                        {/* CASE 2 & 3: PAYPAL (Standard OR PayLater) */}
+                        {/* We use one unified PayPal Buttons container with fundingSource={undefined} so PayPal handles the stacking logic */}
+                        {(selectedPaymentMethod === 'paypal' || selectedPaymentMethod === 'paylater') && (
+                          <div className="relative z-10 w-full space-y-4">
+                            
+                            {/* If 'paylater' selected in Step 2, show the banner message to reinforce the choice */}
+                            {selectedPaymentMethod === 'paylater' && (
+                              <div className="bg-white rounded-lg p-2 text-black">
+                                <PayPalMessages 
+                                  style={{ layout: "text", text: { align: "center" } }}
+                                  amount={finalPrice.toString()}
+                                  forceReRender={[finalPrice]}
+                                />
+                              </div>
+                            )}
+
+                            {/* The Smart Button Stack. PayPal automatically decides if PayLater button appears. */}
                             <PayPalButtons
                               style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
-                              fundingSource="paypal" // Force Yellow Button
+                              fundingSource={undefined} // Allows both Gold (Pay) and Blue (Pay Later) buttons to render if eligible
                               forceReRender={[finalPrice, course.id, couponCode]}
-                              createOrder={createPayPalOrderHandler}
+                              createOrder={createOrderHandler}
                               onApprove={onApproveHandler}
                               onError={(err) => {
                                 console.error("PayPal Error:", err);
-                                toast.error("PayPal failed to load.");
-                              }}
-                            />
-                          </div>
-                        )}
-
-                        {/* CASE 3: PAYPAL PAY LATER */}
-                        {selectedPaymentMethod === 'paylater' && (
-                          <div className="relative z-10 w-full space-y-4">
-                            {/* Message Banner */}
-                            <div className="bg-white rounded-lg p-2">
-                              <PayPalMessages 
-                                style={{ layout: "text", text: { align: "center" } }}
-                                amount={finalPrice.toString()}
-                                forceReRender={[finalPrice]}
-                              />
-                            </div>
-                            {/* Force Blue Button */}
-                            <PayPalButtons
-                              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                              fundingSource="paylater" 
-                              forceReRender={[finalPrice, course.id, couponCode]}
-                              createOrder={createPayPalOrderHandler}
-                              onApprove={onApproveHandler}
-                              onError={(err) => {
-                                console.error("Pay Later Error:", err);
-                                toast.error("Pay Later is not available for this transaction.");
+                                if (!String(err).includes("popup close")) {
+                                  toast.error("PayPal failed to load.");
+                                }
                               }}
                             />
                           </div>
