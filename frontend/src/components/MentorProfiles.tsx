@@ -140,7 +140,7 @@ export default function MentorProfiles() {
   }
 
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />

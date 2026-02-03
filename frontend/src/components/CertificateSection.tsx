@@ -63,7 +63,7 @@ export default function CertificateSection({ onApplyNow }: CertificateSectionPro
   const prevSlide = () => setCurrent((prev) => (prev - 1 + certificates.length) % certificates.length);
 
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
       <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />

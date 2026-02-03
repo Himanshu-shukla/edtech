@@ -153,7 +153,7 @@ const MobileCard = ({ item, index }: { item: typeof mobileImages[0], index: numb
 
 export default function Mission() {
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
@@ -230,14 +230,14 @@ export default function Mission() {
           </div>
 
           {/* Final "Success" Marker */}
-          <div className="sticky top-[220px] md:top-[200px] flex justify-center py-12 z-0">
+          {/* <div className="sticky top-[220px] md:top-[200px] flex justify-center py-12 z-0">
              <div className="flex flex-col items-center gap-3 opacity-50">
                <div className="w-12 h-12 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                </div>
                <span className="text-xs text-zinc-500 uppercase tracking-widest">Success Achieved</span>
              </div>
-          </div>
+          </div> */}
         </div>
 
       </div>

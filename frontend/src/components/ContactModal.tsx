@@ -1,6 +1,19 @@
-import { useState } from 'react';
-import toast from 'react-hot-toast';
-import { submitStrategyCall } from '../api';
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence, easeOut } from "framer-motion";
+import type { Variants } from "framer-motion";
+import {
+  X,
+  User,
+  Mail,
+  Phone,
+  Loader2,
+  CheckCircle2,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+} from "lucide-react";
+import { submitStrategyCall } from "../api";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -9,189 +22,231 @@ interface ContactModalProps {
   subtitle?: string;
 }
 
-export default function ContactModal({ 
-  isOpen, 
-  onClose, 
+/* ---------------- Animation Variants ---------------- */
+
+const backdropVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const modalVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+    transition: { duration: 0.2 },
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: easeOut, // ✅ FIXED (type-safe)
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+    transition: { duration: 0.2 },
+  },
+};
+
+/* ---------------- Component ---------------- */
+
+export default function ContactModal({
+  isOpen,
+  onClose,
   title = "Book FREE Strategy Call",
-  subtitle = "Connect with our career transformation experts to discuss your goals and create a personalized roadmap"
+  subtitle = "Connect with our career experts to create your personalized roadmap.",
 }: ContactModalProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: ''
+    name: "",
+    email: "",
+    phone: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const result = await submitStrategyCall({
         ...formData,
-        source: 'strategy_call_modal'
+        source: "strategy_call_modal",
       });
-      setIsSubmitting(false);
-      setFormData({ name: '', email: '', phone: '' });
-      onClose();
+
       toast.success(result.message);
-    } catch (error) {
+      setFormData({ name: "", email: "", phone: "" });
+      onClose();
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      toast.error('Something went wrong. Please try again.');
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', email: '', phone: '' });
+    setFormData({ name: "", email: "", phone: "" });
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-bg-deep/95 backdrop-blur border border-white/20 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all mx-4">
-          {/* Close Button */}
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10 p-1 rounded-lg hover:bg-white/10"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
+
+          {/* Modal */}
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            {/* Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
 
-          {/* Header */}
-          <div className="mb-6 pr-8">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {title}
-            </h2>
-            <p className="text-white/70 text-sm leading-relaxed">
-              {subtitle}
-            </p>
-          </div>
+            {/* Header */}
+            <div className="relative p-6 pb-0">
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
-                Full Name <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
+              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-orange-400">
+                <Sparkles className="w-3 h-3" />
+                Career Growth
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+              <p className="text-zinc-400 text-sm">{subtitle}</p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              {/* Name */}
+              <InputField
+                label="Full Name"
                 name="name"
-                required
-                value={formData.name ?? ""}
+                value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your full name"
+                placeholder="John Doe"
+                icon={<User className="w-5 h-5" />}
               />
-            </div>
 
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
-                Email Address <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
+              {/* Email */}
+              <InputField
+                label="Email Address"
                 name="email"
-                required
-                value={formData.email ?? ""}
+                type="email"
+                value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your email address"
+                placeholder="john@example.com"
+                icon={<Mail className="w-5 h-5" />}
               />
-            </div>
 
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">
-                Phone Number <span className="text-edtech-orange">*</span>
-              </label>
-              <input
-                type="tel"
-                id="phone"
+              {/* Phone */}
+              <InputField
+                label="Phone Number"
                 name="phone"
-                required
-                value={formData.phone ?? ""}
+                value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-edtech-green focus:border-edtech-green transition-all duration-200 text-white placeholder-white/50"
-                placeholder="Enter your phone number"
+                placeholder="+1 (555) 000-0000"
+                icon={<Phone className="w-5 h-5" />}
               />
-            </div>
 
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="w-full sm:flex-1 px-4 py-3 border border-white/30 text-white/90 rounded-lg hover:bg-white/10 hover:border-white/50 transition-colors duration-200 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:flex-1 px-4 py-3 bg-edtech-green text-black rounded-lg hover:brightness-110 hover:scale-105 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Request'
-                )}
-              </button>
-            </div>
-          </form>
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="flex-1 px-4 py-3 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                >
+                  Cancel
+                </button>
 
-          {/* Trust Indicators */}
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <div className="flex items-center justify-center gap-6 text-xs text-white/60">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-[2] px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Confirm Booking"
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Footer */}
+            <div className="bg-zinc-900/50 border-t border-zinc-800 p-4 flex justify-between text-xs text-zinc-500">
               <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-green" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Free Consultation
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                No Spam
               </div>
               <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-blue" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                No Commitment
+                <Clock className="w-3.5 h-3.5 text-orange-500" />
+                Fast Response
               </div>
               <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-edtech-orange" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                24hr Response
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                Free & Confidential
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ---------------- Reusable Input ---------------- */
+
+function InputField({
+  label,
+  icon,
+  ...props
+}: {
+  label: string;
+  icon: React.ReactNode;
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-medium text-zinc-400 ml-1">
+        {label} <span className="text-orange-500">*</span>
+      </label>
+      <div className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-500 group-focus-within:text-emerald-500">
+          {icon}
+        </div>
+        <input
+          {...props}
+          required
+          className="w-full bg-zinc-900/50 border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-4 py-3 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50"
+        />
       </div>
     </div>
   );

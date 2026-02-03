@@ -64,7 +64,7 @@ export default function WhyChooseUs() {
   }
 
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />

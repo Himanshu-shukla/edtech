@@ -100,7 +100,9 @@ export class PayPalService {
         landing_page: 'LOGIN',
         user_action: 'PAY_NOW',
         return_url: `${process.env.FRONTEND_URL}/payment/success`,
-        cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`
+        cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+        // FIX 1: Explicitly tell PayPal this is a digital good (No Shipping)
+        shipping_preference: 'NO_SHIPPING' 
       },
       purchase_units: [{
         reference_id: orderData.orderId,
@@ -109,13 +111,11 @@ export class PayPalService {
           currency_code: orderData.currency,
           value: orderData.amount.toFixed(2)
         },
-        // Optional: Payee info is often inferred from client ID, but can be explicit
-        payee: process.env.PAYPAL_MERCHANT_EMAIL ? {
-            email_address: process.env.PAYPAL_MERCHANT_EMAIL
-        } : undefined,
+        // FIX 2: REMOVED 'payee' OBJECT
+        // PayPal infers the payee from the Client ID. 
+        // Sending a mismatched email here causes INSTRUMENT_DECLINED in Sandbox.
         custom_id: orderData.courseId
       }],
-      // Only include payer info if strict requirements exist, otherwise PayPal collects this on their page
       payer: {
         email_address: orderData.customerInfo.email,
         name: {
@@ -168,14 +168,20 @@ export class PayPalService {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        // Empty body is required for capture
         body: JSON.stringify({}) 
       });
 
+      // FIX 3: Better Error Logging for Capture
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Capture Failed:', JSON.stringify(errorData, null, 2));
-        throw new Error('Failed to capture PayPal payment');
+        const errorData = await response.json() as any;
+        console.error('Capture Failed Details:', JSON.stringify(errorData, null, 2));
+        
+        // Handle "Already Captured" scenario specifically
+        if (errorData.details && errorData.details[0]?.issue === 'ORDER_ALREADY_CAPTURED') {
+           return { status: 'COMPLETED', note: 'Already captured' };
+        }
+
+        throw new Error(`Failed to capture PayPal payment: ${errorData.message || 'Unknown error'}`);
       }
 
       return await response.json();
@@ -185,12 +191,9 @@ export class PayPalService {
     }
   }
 
-  /**
-   * Get order details from PayPal
-   */
+  // ... keep other methods (getOrderDetails, refundPayment, etc) as they were
   async getOrderDetails(orderId: string): Promise<any> {
     const accessToken = await this.getAccessToken();
-
     try {
       const response = await fetch(`${this.baseUrl}/v2/checkout/orders/${orderId}`, {
         method: 'GET',
@@ -199,11 +202,7 @@ export class PayPalService {
           'Content-Type': 'application/json'
         }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get order details');
-      }
-
+      if (!response.ok) throw new Error('Failed to get order details');
       return await response.json();
     } catch (error) {
       console.error('PayPal get details error:', error);
@@ -211,14 +210,9 @@ export class PayPalService {
     }
   }
 
-  /**
-   * Refund a captured payment
-   */
   async refundPayment(captureId: string, amount?: { currency_code: string; value: string }): Promise<any> {
     const accessToken = await this.getAccessToken();
-
     const payload = amount ? { amount } : {};
-
     try {
       const response = await fetch(`${this.baseUrl}/v2/payments/captures/${captureId}/refund`, {
         method: 'POST',
@@ -228,11 +222,7 @@ export class PayPalService {
         },
         body: JSON.stringify(payload)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to refund payment');
-      }
-
+      if (!response.ok) throw new Error('Failed to refund payment');
       return await response.json();
     } catch (error) {
       console.error('PayPal refund error:', error);
@@ -240,28 +230,18 @@ export class PayPalService {
     }
   }
 
-  /**
-   * Verify webhook signature
-   * Note: This uses the API endpoint to verify signatures, replacing the old SDK method.
-   */
-  async verifyWebhookSignature(
-    headers: any,
-    body: string, // Raw string body is required
-    webhookId: string
-  ): Promise<boolean> {
+  async verifyWebhookSignature(headers: any, body: string, webhookId: string): Promise<boolean> {
     const accessToken = await this.getAccessToken();
-
     try {
       const payload = {
         auth_algo: headers['paypal-auth-algo'],
-        cert_url: headers['paypal-cert-url'], // Note: API expects 'cert_url', SDK used 'cert_id' sometimes
+        cert_url: headers['paypal-cert-url'],
         transmission_id: headers['paypal-transmission-id'],
         transmission_sig: headers['paypal-transmission-sig'],
         transmission_time: headers['paypal-transmission-time'],
         webhook_id: webhookId,
         webhook_event: JSON.parse(body)
       };
-
       const response = await fetch(`${this.baseUrl}/v1/notifications/verify-webhook-signature`, {
         method: 'POST',
         headers: {
@@ -270,7 +250,6 @@ export class PayPalService {
         },
         body: JSON.stringify(payload)
       });
-
       const result = await response.json() as any;
       return result.verification_status === 'SUCCESS';
     } catch (error) {

@@ -164,7 +164,7 @@ export default function VideoTestimonials() {
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:30px_30px]" />
 

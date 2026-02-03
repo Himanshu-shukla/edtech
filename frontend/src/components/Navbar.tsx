@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Menu, X, ChevronDown, Sparkles, ArrowRight, Zap, 
-  GraduationCap, Phone 
+import {
+  Menu, X, ChevronDown, Sparkles, ArrowRight, Zap,
+  GraduationCap, Phone
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -61,7 +61,7 @@ export default function Navbar() {
             <span className="text-white">fast-track your career</span> 🚀
           </span>
           <span className="mx-2 text-zinc-700 hidden sm:inline">|</span>
-          <button 
+          <button
             onClick={() => openModal()}
             className="group flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors font-bold underline decoration-emerald-500/30 underline-offset-4"
           >
@@ -72,62 +72,65 @@ export default function Navbar() {
       </div>
 
       {/* --- Main Navbar --- */}
-      <nav 
+      <nav
         className={cn(
-          "fixed inset-x-0 top-[37px] sm:top-[41px] z-50 border-b transition-all duration-300",
-          scrolled 
-            ? "bg-zinc-950/80 backdrop-blur-xl border-white/10 py-2 shadow-lg shadow-black/20" 
-            : "bg-transparent border-transparent py-4"
+          "fixed inset-x-0 z-50 border-b transition-all duration-300",
+          scrolled
+            ? "top-0 bg-zinc-950/80 backdrop-blur-xl border-white/10 py-2 shadow-lg shadow-black/20"
+            : "top-[37px] sm:top-[41px] bg-transparent border-transparent py-4"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          
+
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 relative z-50 group">
-            <img 
-              src={WhiteLogo} 
-              alt="EdTech Informative" 
-              className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity" 
+            <img
+              src={WhiteLogo}
+              alt="EdTech Informative"
+              className="h-10 w-auto opacity-90 group-hover:opacity-100 transition-opacity"
             />
           </Link>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <NavLink to="/">Home</NavLink>
-            
+
             {/* Dropdown Trigger */}
-            <div 
+            <div
               className="relative group h-full flex items-center"
               onMouseEnter={() => setCoursesDropdownOpen(true)}
               onMouseLeave={() => setCoursesDropdownOpen(false)}
             >
-              <button 
+              <button
                 className={cn(
-                  "flex items-center gap-1.5 text-sm font-medium transition-colors outline-none",
+                  "flex items-center gap-1.5 text-sm font-medium transition-colors outline-none py-2",
                   coursesDropdownOpen ? "text-orange-500" : "text-zinc-400 hover:text-white"
                 )}
               >
                 Programs
                 <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", coursesDropdownOpen && "rotate-180")} />
               </button>
-              
+
               {/* Dropdown Content */}
               <AnimatePresence>
                 {coursesDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.98 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 pt-6 w-[400px]"
+                    className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[400px] z-50"
                   >
-                    {/* Invisible Bridge */}
-                    <div className="absolute top-0 left-0 w-full h-6" />
+                    {/* FIX: Invisible Bridge 
+                        Extends upwards (-top-10) to overlap the button area.
+                        This prevents the mouse from 'falling into the gap' and closing the menu.
+                    */}
+                    <div className="absolute -top-10 left-0 w-full h-20 bg-transparent" />
 
                     <div className="relative bg-zinc-900/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
                       {/* Decoration */}
                       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-                      
+
                       <div className="p-5 border-b border-white/5">
                         <h3 className="text-white font-bold flex items-center gap-2">
                           <Zap className="w-4 h-4 text-orange-500" />
@@ -135,7 +138,7 @@ export default function Navbar() {
                         </h3>
                         <p className="text-zinc-500 text-xs mt-1">Industry-leading certification programs</p>
                       </div>
-                      
+
                       <div className="p-2 grid gap-1">
                         {loading ? (
                           <div className="p-4 text-center text-zinc-500 text-sm">Loading...</div>
@@ -143,16 +146,16 @@ export default function Navbar() {
                           <div className="p-4 text-center text-zinc-500 text-sm">No programs available</div>
                         ) : (
                           displayedCourses.map((course) => (
-                            <Link 
-                              key={course.id} 
+                            <Link
+                              key={course.id}
                               to={`/program/${course.id}`}
                               className="group flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
                             >
                               <div className={cn(
                                 "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-inner",
-                                course.accent === 'edtech-green' ? 'bg-emerald-500/20 text-emerald-400' : 
-                                course.accent === 'edtech-orange' ? 'bg-orange-500/20 text-orange-400' :
-                                'bg-red-500/20 text-red-400'
+                                course.accent === 'edtech-green' ? 'bg-emerald-500/20 text-emerald-400' :
+                                  course.accent === 'edtech-orange' ? 'bg-orange-500/20 text-orange-400' :
+                                    'bg-red-500/20 text-red-400'
                               )}>
                                 <GraduationCap className="w-5 h-5" />
                               </div>
@@ -166,9 +169,9 @@ export default function Navbar() {
                                   <span className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide",
                                     course.badge === 'FEATURED' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
-                                    course.badge === 'TRENDING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
-                                    course.badge === 'MOST POPULAR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20' : 
-                                    'hidden'
+                                      course.badge === 'TRENDING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
+                                        course.badge === 'MOST POPULAR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20' :
+                                          'hidden'
                                   )}>
                                     {course.badge}
                                   </span>
@@ -178,10 +181,10 @@ export default function Navbar() {
                           ))
                         )}
                       </div>
-                      
+
                       <div className="p-3 bg-zinc-950/50 border-t border-white/5">
-                        <Link 
-                          to="/programs" 
+                        <Link
+                          to="/programs"
                           className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-400 hover:text-white py-2 rounded-lg hover:bg-white/5 transition-colors group"
                         >
                           View All Programs
@@ -193,15 +196,15 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
-            
+
             <NavLink to="/pricing">Pricing</NavLink>
             <NavLink to="/about">About</NavLink>
-            <NavLink to="/contact" onClick={openModal}>Contact</NavLink>
+            <NavLink to="/contact" onClick={() => openModal()}>Contact</NavLink>
           </div>
 
           {/* CTA & Mobile Toggle */}
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => openModal()}
               className="hidden md:flex relative overflow-hidden group rounded-lg bg-white px-5 py-2.5 transition-all hover:scale-105 active:scale-95"
             >
@@ -237,9 +240,9 @@ export default function Navbar() {
                 <MobileLink to="/pricing" onClick={() => setMobileOpen(false)}>Pricing</MobileLink>
                 <MobileLink to="/about" onClick={() => setMobileOpen(false)}>About</MobileLink>
                 <MobileLink to="/contact" onClick={() => { setMobileOpen(false); openModal(); }}>Contact Us</MobileLink>
-                
+
                 <div className="pt-4 mt-4 border-t border-white/10">
-                  <button 
+                  <button
                     onClick={() => {
                       setMobileOpen(false);
                       openModal();
@@ -263,10 +266,10 @@ export default function Navbar() {
 
 function NavLink({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       onClick={onClick}
-      className="text-sm font-medium text-zinc-400 hover:text-white transition-colors relative group"
+      className="text-sm font-medium text-zinc-400 hover:text-white transition-colors relative group py-2"
     >
       {children}
       <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full" />
@@ -276,8 +279,8 @@ function NavLink({ to, children, onClick }: { to: string; children: React.ReactN
 
 function MobileLink({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       onClick={onClick}
       className="block text-lg font-medium text-zinc-300 hover:text-white hover:translate-x-2 transition-all"
     >

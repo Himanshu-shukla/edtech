@@ -65,7 +65,10 @@ const Marquee = ({
             <img 
               src={company.logo} 
               alt={company.name}
-              className="h-8 w-auto object-contain opacity-40 grayscale transition-all duration-300 group-hover/card:grayscale-0 group-hover/card:opacity-100 group-hover/card:scale-110"
+              // --- CHANGES MADE HERE ---
+              // Removed: opacity-40 grayscale group-hover/card:grayscale-0 group-hover/card:opacity-100
+              // Kept: The scaling effect on hover
+              className="h-8 w-auto object-contain transition-all duration-300 group-hover/card:scale-110"
               loading="lazy"
             />
           </div>
@@ -82,11 +85,11 @@ export default function CompanyShowcase() {
   const row3 = companies.slice(16);
 
   return (
-    <section className="relative py-24 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 bg-zinc-950 overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-
+      
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         
         {/* Header */}
@@ -103,7 +106,6 @@ export default function CompanyShowcase() {
             </span>
             YOUR GATEWAY TO GLOBAL CAREERS
           </motion.div>
-
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -133,7 +135,7 @@ export default function CompanyShowcase() {
           {/* Vertical fade masks for the whole block */}
           <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-zinc-950 to-transparent z-20 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-zinc-950 to-transparent z-20 pointer-events-none" />
-
+          
           <motion.div
              initial={{ opacity: 0 }}
              whileInView={{ opacity: 1 }}

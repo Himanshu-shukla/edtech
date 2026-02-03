@@ -97,13 +97,13 @@ export default function HomePage() {
         <Divider />
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="py-20 bg-zinc-900/30 backdrop-blur-sm">
+          <SectionReveal className="bg-zinc-900/30 backdrop-blur-sm">
             <Mission />
           </SectionReveal>
         </Suspense>
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="pt-20 pb-10">
+          <SectionReveal className="pb-10">
             <CompanyShowcase />
           </SectionReveal>
         </Suspense>
