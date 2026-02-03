@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
-import { X, CreditCard, Wallet, ChevronRight, ArrowLeft, ShieldCheck, Loader2, Tag, Sparkles, CheckCircle2 } from 'lucide-react';
+import { PayPalScriptProvider, PayPalButtons, PayPalMessages } from '@paypal/react-paypal-js';
+import { X, CreditCard, Wallet, ChevronRight, ArrowLeft, ShieldCheck, Loader2, Sparkles, CheckCircle2, Clock } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-// --- API Imports ---
 import {
   createPayPalOrder,
   capturePayPalPayment,
@@ -82,7 +81,8 @@ export default function PaymentModal({
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '', phone: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'paypal'>('razorpay');
+  // Updated state to include 'paylater'
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'paypal' | 'paylater'>('razorpay');
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
 
   // Coupon & Price State
@@ -192,11 +192,47 @@ export default function PaymentModal({
     }
   };
 
+  // Helper function for PayPal Order Creation (Reused for both Standard & PayLater)
+  const createPayPalOrderHandler = async () => {
+    try {
+      const response = await createPayPalOrder({
+        courseId: course.id,
+        customerInfo,
+        couponCode: appliedCoupon?.coupon?.code
+      });
+      
+      if (!response.success || !response.order?.id) {
+         throw new Error(response.error || 'Initialization failed');
+      }
+      return response.order.id;
+    } catch (error: any) {
+      toast.error(`Order Error: ${error.message}`);
+      throw error;
+    }
+  };
+
+  // Helper for PayPal Approval (Reused)
+  const onApproveHandler = async (data: any) => {
+    try {
+      const response = await capturePayPalPayment(data.orderID);
+      if (response.success) {
+        toast.success(`Enrolled Successfully!`);
+        onClose();
+      } else {
+        toast.error('Payment capture failed. Please try again.');
+      }
+    } catch (error: any) {
+      toast.error('Transaction failed.');
+    }
+  };
+
   return (
     <PayPalScriptProvider options={{
       clientId: PAYPAL_CLIENT_ID || "sb",
       currency: "GBP",
-      intent: "capture"
+      intent: "capture",
+      components: "buttons,messages",
+      "enable-funding": "paylater" 
     }}>
       <AnimatePresence>
         {isOpen && (
@@ -208,14 +244,13 @@ export default function PaymentModal({
               onClick={onClose}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
-
+            
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden"
             >
-              {/* Background Glows */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
 
@@ -233,25 +268,26 @@ export default function PaymentModal({
                 </button>
               </div>
 
-              {/* Steps */}
+              {/* Progress Bar */}
               <div className="px-6 py-4">
                 <div className="flex justify-between items-center mb-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500">
-                  <span className={cn(currentStep >= 1 && "text-orange-500")}>Details</span>
-                  <span className={cn(currentStep >= 2 && "text-orange-500")}>Method</span>
-                  <span className={cn(currentStep >= 3 && "text-orange-500")}>Payment</span>
+                  <span className={cn(currentStep >= 1 && "text-orange-400")}>Details</span>
+                  <span className={cn(currentStep >= 2 && "text-orange-400")}>Method</span>
+                  <span className={cn(currentStep >= 3 && "text-orange-400")}>Payment</span>
                 </div>
                 <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <motion.div
+                  <motion.div 
                     initial={{ width: "33%" }}
                     animate={{ width: `${(currentStep / 3) * 100}%` }}
-                    className="h-full bg-gradient-to-r from-orange-600 to-yellow-500"
+                    className="h-full bg-gradient-to-r from-orange-600 to-yellow-500" 
                   />
                 </div>
               </div>
 
               <div className="p-6 pt-2 min-h-[400px]">
                 <AnimatePresence mode="wait">
-                  {/* STEP 1: Details */}
+                  
+                  {/* --- STEP 1: Details --- */}
                   {currentStep === 1 && (
                     <motion.div
                       key="step1"
@@ -270,13 +306,13 @@ export default function PaymentModal({
 
                       <LabelInputContainer>
                         <div className="flex gap-2 relative">
-                          <Input
+                          <Input 
                             value={couponCode}
                             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                             placeholder="Coupon Code"
                             disabled={!!appliedCoupon}
                           />
-                          <button
+                          <button 
                             onClick={appliedCoupon ? () => { setAppliedCoupon(null); setCouponCode(''); setFinalPrice(coursePrice); } : handleValidateCoupon}
                             disabled={isValidatingCoupon || (!couponCode && !appliedCoupon)}
                             className={cn(
@@ -284,7 +320,7 @@ export default function PaymentModal({
                               appliedCoupon ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : "bg-zinc-800 text-white hover:bg-zinc-700"
                             )}
                           >
-                            {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : appliedCoupon ? "Remove" : "Apply"}
+                            {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin"/> : appliedCoupon ? "Remove" : "Apply"}
                           </button>
                         </div>
                         {couponError && <p className="text-red-400 text-xs px-1">{couponError}</p>}
@@ -293,35 +329,18 @@ export default function PaymentModal({
 
                       <div className="space-y-4">
                         <LabelInputContainer>
-                          <Input
-                            placeholder="Full Name"
-                            value={customerInfo.name}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                            className={errors.name && "border-red-500/50"}
-                          />
+                          <Input placeholder="Full Name" value={customerInfo.name} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} className={errors.name && "border-red-500/50"} />
                         </LabelInputContainer>
                         <LabelInputContainer>
-                          <Input
-                            placeholder="Email Address"
-                            type="email"
-                            value={customerInfo.email}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                            className={errors.email && "border-red-500/50"}
-                          />
+                          <Input placeholder="Email Address" type="email" value={customerInfo.email} onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})} className={errors.email && "border-red-500/50"} />
                         </LabelInputContainer>
                         <LabelInputContainer>
-                          <Input
-                            placeholder="Phone Number"
-                            type="tel"
-                            value={customerInfo.phone}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                            className={errors.phone && "border-red-500/50"}
-                          />
+                          <Input placeholder="Phone Number" type="tel" value={customerInfo.phone} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} className={errors.phone && "border-red-500/50"} />
                         </LabelInputContainer>
                       </div>
 
                       <button
-                        onClick={() => { if (validateForm()) setCurrentStep(2); }}
+                        onClick={() => { if(validateForm()) setCurrentStep(2); }}
                         className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
                       >
                         Continue <ChevronRight className="w-4 h-4" />
@@ -329,7 +348,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* STEP 2: Method */}
+                  {/* --- STEP 2: Method (UPDATED) --- */}
                   {currentStep === 2 && (
                     <motion.div
                       key="step2"
@@ -339,42 +358,43 @@ export default function PaymentModal({
                       className="space-y-6"
                     >
                       <div className="space-y-3">
-                        <div
+                        {/* Option 1: Razorpay */}
+                        <div 
                           onClick={() => setSelectedPaymentMethod('razorpay')}
                           className={cn(
                             "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
-                            selectedPaymentMethod === 'razorpay'
-                              ? "bg-zinc-800 border-orange-500 shadow-lg shadow-orange-900/20"
-                              : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                            selectedPaymentMethod === 'razorpay' ? "bg-zinc-800 border-orange-500 shadow-lg shadow-orange-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
                           )}
                         >
-                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-orange-500">
-                            <CreditCard className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-white">Razorpay</h3>
-                            <p className="text-xs text-zinc-500">UPI, Cards, Netbanking</p>
-                          </div>
+                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-orange-500"><CreditCard className="w-6 h-6" /></div>
+                          <div><h3 className="font-bold text-white">Razorpay</h3><p className="text-xs text-zinc-500">UPI, Cards, Netbanking</p></div>
                           {selectedPaymentMethod === 'razorpay' && <CheckCircle2 className="ml-auto w-5 h-5 text-orange-500" />}
                         </div>
 
-                        <div
+                        {/* Option 2: PayPal Standard */}
+                        <div 
                           onClick={() => setSelectedPaymentMethod('paypal')}
                           className={cn(
                             "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
-                            selectedPaymentMethod === 'paypal'
-                              ? "bg-zinc-800 border-blue-500 shadow-lg shadow-blue-900/20"
-                              : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                            selectedPaymentMethod === 'paypal' ? "bg-zinc-800 border-yellow-500 shadow-lg shadow-yellow-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
                           )}
                         >
-                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-blue-500">
-                            <Wallet className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-white">PayPal</h3>
-                            <p className="text-xs text-zinc-500">International Cards</p>
-                          </div>
-                          {selectedPaymentMethod === 'paypal' && <CheckCircle2 className="ml-auto w-5 h-5 text-blue-500" />}
+                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-yellow-500"><Wallet className="w-6 h-6" /></div>
+                          <div><h3 className="font-bold text-white">PayPal</h3><p className="text-xs text-zinc-500">One-Time Payment</p></div>
+                          {selectedPaymentMethod === 'paypal' && <CheckCircle2 className="ml-auto w-5 h-5 text-yellow-500" />}
+                        </div>
+
+                        {/* Option 3: PayPal Pay Later */}
+                        <div 
+                          onClick={() => setSelectedPaymentMethod('paylater')}
+                          className={cn(
+                            "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
+                            selectedPaymentMethod === 'paylater' ? "bg-zinc-800 border-blue-500 shadow-lg shadow-blue-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                          )}
+                        >
+                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-blue-500"><Clock className="w-6 h-6" /></div>
+                          <div><h3 className="font-bold text-white">Pay Later</h3><p className="text-xs text-zinc-500">3 Interest-Free Installments</p></div>
+                          {selectedPaymentMethod === 'paylater' && <CheckCircle2 className="ml-auto w-5 h-5 text-blue-500" />}
                         </div>
                       </div>
 
@@ -382,8 +402,8 @@ export default function PaymentModal({
                         <button onClick={() => setCurrentStep(1)} className="p-3 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white">
                           <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => setCurrentStep(3)}
+                        <button 
+                          onClick={() => setCurrentStep(3)} 
                           className="flex-1 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-900/20"
                         >
                           Review & Pay
@@ -392,7 +412,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* STEP 3: Confirm */}
+                  {/* --- STEP 3: Confirm (LOGIC SPLIT) --- */}
                   {currentStep === 3 && (
                     <motion.div
                       key="step3"
@@ -407,7 +427,8 @@ export default function PaymentModal({
                       </div>
 
                       <div className="min-h-[60px]">
-                        {selectedPaymentMethod === 'razorpay' ? (
+                        {/* CASE 1: RAZORPAY */}
+                        {selectedPaymentMethod === 'razorpay' && (
                           <button
                             onClick={handleRazorpayPayment}
                             disabled={isProcessing}
@@ -416,57 +437,46 @@ export default function PaymentModal({
                             {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                             {isProcessing ? "Processing..." : "Secure Pay"}
                           </button>
-                        ) : (
-                          <div className="relative z-10 w-full min-h-[150px]">
+                        )}
+
+                        {/* CASE 2: PAYPAL STANDARD */}
+                        {selectedPaymentMethod === 'paypal' && (
+                          <div className="relative z-10 w-full min-h-[60px]">
                             <PayPalButtons
                               style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
-                              // Fixed funding source prevents "smart button" flickering
-                              fundingSource={undefined}
-                              // Only re-render when absolutely necessary
+                              fundingSource="paypal" // Force Yellow Button
                               forceReRender={[finalPrice, course.id, couponCode]}
-
-                              createOrder={async (data, actions) => {
-                                try {
-                                  const response = await createPayPalOrder({
-                                    courseId: course.id,
-                                    customerInfo,
-                                    couponCode: appliedCoupon?.coupon?.code
-                                  });
-
-                                  if (!response.success || !response.order?.id) {
-                                    throw new Error(response.error || 'Initialization failed');
-                                  }
-
-                                  return response.order.id;
-                                } catch (error: any) {
-                                  // This toast will tell you if the BACKEND failed
-                                  toast.error(`Order Error: ${error.message}`);
-                                  throw error;
-                                }
-                              }}
-
-                              onApprove={async (data, actions) => {
-                                try {
-                                  const response = await capturePayPalPayment(data.orderID);
-                                  if (response.success) {
-                                    toast.success(`Enrolled Successfully!`);
-                                    onClose();
-                                  } else {
-                                    // If capture fails, restart the logic
-                                    toast.error('Payment capture failed. Please try again.');
-                                  }
-                                } catch (error: any) {
-                                  toast.error('Transaction failed.');
-                                }
-                              }}
-
-                              // Catch initialization errors
+                              createOrder={createPayPalOrderHandler}
+                              onApprove={onApproveHandler}
                               onError={(err) => {
-                                console.error("PayPal SDK Error:", err);
-                                // Don't show toast for "popup closed" as it's annoying
-                                if (!String(err).includes("popup close")) {
-                                  toast.error("Could not load PayPal window.");
-                                }
+                                console.error("PayPal Error:", err);
+                                toast.error("PayPal failed to load.");
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* CASE 3: PAYPAL PAY LATER */}
+                        {selectedPaymentMethod === 'paylater' && (
+                          <div className="relative z-10 w-full space-y-4">
+                            {/* Message Banner */}
+                            <div className="bg-white rounded-lg p-2">
+                              <PayPalMessages 
+                                style={{ layout: "text", text: { align: "center" } }}
+                                amount={finalPrice.toString()}
+                                forceReRender={[finalPrice]}
+                              />
+                            </div>
+                            {/* Force Blue Button */}
+                            <PayPalButtons
+                              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                              fundingSource="paylater" 
+                              forceReRender={[finalPrice, course.id, couponCode]}
+                              createOrder={createPayPalOrderHandler}
+                              onApprove={onApproveHandler}
+                              onError={(err) => {
+                                console.error("Pay Later Error:", err);
+                                toast.error("Pay Later is not available for this transaction.");
                               }}
                             />
                           </div>

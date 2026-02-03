@@ -1,6 +1,51 @@
 import { useState, useEffect } from "react";
+import { motion, easeOut } from "framer-motion";
+import type { Variants } from "framer-motion";
+import {
+  TrendingUp,
+  Users,
+  Zap,
+  Award,
+  BarChart3,
+  Globe,
+  Sparkles,
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 import { getAdvantageStatsData } from "../utils/dataAdapter";
 import type { AdvantageStat } from "../types";
+
+// --- Utility ---
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+// --- Motion Variants (FIXED) ---
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: easeOut, // ✅ FIXED
+    },
+  },
+};
 
 export default function AdvantageStats() {
   const [advantageStats, setAdvantageStats] = useState<AdvantageStat[]>([]);
@@ -18,100 +63,141 @@ export default function AdvantageStats() {
         setLoading(false);
       }
     };
-
     loadAdvantageStats();
   }, []);
 
-  useEffect(() => {
-    if (loading || advantageStats.length === 0) return;
+  // Icon mapping
+  const getIcon = (index: number) => {
+    const icons = [TrendingUp, Zap, Users, Award, BarChart3, Globe];
+    const Icon = icons[index % icons.length];
+    return <Icon className="w-6 h-6" />;
+  };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target); // ✅ prevent re-trigger
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    const revealElements = document.querySelectorAll(".advantage-reveal");
-    revealElements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, [loading, advantageStats]);
+  // Color mapping
+  const getColorStyles = (accent: string) => {
+    switch (accent) {
+      case "orange":
+        return {
+          text: "text-orange-400",
+          bg: "bg-orange-500/10",
+          border: "group-hover:border-orange-500/50",
+          icon: "text-orange-400",
+        };
+      case "green":
+        return {
+          text: "text-emerald-400",
+          bg: "bg-emerald-500/10",
+          border: "group-hover:border-emerald-500/50",
+          icon: "text-emerald-400",
+        };
+      default:
+        return {
+          text: "text-cyan-400",
+          bg: "bg-cyan-500/10",
+          border: "group-hover:border-cyan-500/50",
+          icon: "text-cyan-400",
+        };
+    }
+  };
 
   if (loading) {
     return (
-      <section className="py-20 px-4 bg-[#f4f7f1]">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="text-gray-600 text-lg">
-            Loading advantage stats...
-          </div>
-        </div>
+      <section className="py-24 px-6 bg-zinc-950 flex justify-center">
+        <div className="w-8 h-8 border-t-2 border-emerald-500 rounded-full animate-spin" />
       </section>
     );
   }
 
   return (
-    <section className="py-20 px-4 bg-[#f4f7f1]">
+    <section className="relative py-24 px-6 bg-zinc-950 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px]" />
+      </div>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16 advantage-reveal">
-          <div className="badge-hero mx-auto w-max">
-            <span>⚡</span>
-            <span>THE EDTECH ADVANTAGE</span>
-          </div>
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-orange-400 mb-6"
+          >
+            <Sparkles className="w-3 h-3" />
+            THE EDTECH ADVANTAGE
+          </motion.div>
 
-          <h2 className="mt-6 text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
-            <span className="text-edtech-blue">Transform</span>,{" "}
-            <span className="text-edtech-blue">excel</span>, and{" "}
-            <span className="text-edtech-blue">dominate</span>.
-          </h2>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold text-white mb-6"
+          >
+            Transform,{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+              Excel
+            </span>
+            , & Dominate.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, ease: easeOut }}
+            className="text-zinc-400 text-lg"
+          >
+            Numbers that speak for themselves. Join the community redefining tech education.
+          </motion.p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {advantageStats.length === 0 ? (
-            <div className="col-span-full text-center text-gray-600">
-              No stats available at the moment.
-            </div>
-          ) : (
-            advantageStats.map((stat) => (
-              <div
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {advantageStats.map((stat, index) => {
+            const styles = getColorStyles(stat.accent);
+
+            return (
+              <motion.div
                 key={stat.id}
-                className="advantage-stat-card bg-white rounded-2xl p-6 border border-gray-200 transition-all duration-300 hover:-translate-y-1 advantage-reveal"
-                data-accent={stat.accent}
+                variants={itemVariants}
+                className={cn(
+                  "group relative p-8 rounded-3xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-900/80 transition-all duration-300",
+                  styles.border
+                )}
               >
-                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">
-                  {stat.title}
-                </h3>
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className={cn("p-3 rounded-xl", styles.bg, styles.icon)}>
+                      {getIcon(index)}
+                    </div>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest border border-zinc-800 px-2 py-1 rounded-lg">
+                      {stat.title}
+                    </span>
+                  </div>
 
-                <div
-                  className={`text-4xl font-bold mb-2 ${
-                    stat.accent === "blue"
-                      ? "text-edtech-blue"
-                      : stat.accent === "orange"
-                      ? "text-edtech-orange"
-                      : "text-edtech-green"
-                  }`}
-                >
-                  {stat.value}
+                  <div className={cn("text-4xl md:text-5xl font-extrabold mb-2", styles.text)}>
+                    {stat.value}
+                  </div>
+
+                  <div className="text-sm font-semibold text-white uppercase tracking-wide mb-3">
+                    {stat.label}
+                  </div>
+
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    {stat.description}
+                  </p>
                 </div>
-
-                <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
-                  {stat.label}
-                </div>
-
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {stat.description}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     </section>
   );
