@@ -6,6 +6,7 @@ import { X, CreditCard, Wallet, ChevronRight, ArrowLeft, ShieldCheck, Loader2, S
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// --- Mock API Import (Replace with your actual import path) ---
 import {
   createPayPalOrder,
   capturePayPalPayment,
@@ -13,6 +14,18 @@ import {
   verifyPayment,
   validateCoupon as apiValidateCoupon
 } from '../api';
+
+// --- Constants ---
+const COUNTRY_CODES = [
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+1', country: 'US', flag: '🇺🇸' },
+  { code: '+91', country: 'IN', flag: '🇮🇳' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+61', country: 'AU', flag: '🇦🇺' },
+  { code: '+1', country: 'CA', flag: '🇨🇦' },
+  { code: '+49', country: 'DE', flag: '🇩🇪' },
+  { code: '+33', country: 'FR', flag: '🇫🇷' },
+];
 
 // --- Utility ---
 function cn(...inputs: ClassValue[]) {
@@ -37,6 +50,7 @@ interface CustomerInfo {
   name: string;
   email: string;
   phone: string;
+  countryCode: string;
 }
 
 declare global {
@@ -53,18 +67,29 @@ const LabelInputContainer = ({ children, className }: { children: React.ReactNod
   return <div className={cn("flex flex-col space-y-2 w-full", className)}>{children}</div>;
 };
 
-// Updated Input for Light Theme
+const loadRazorpayScript = () => {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type, ...props }, ref) => {
     return (
-      <div className="relative group">
+      <div className="relative group w-full">
         <input
           type={type}
+          ref={ref}
           className={cn(
             "w-full bg-zinc-50 border border-zinc-200 text-zinc-900 text-sm rounded-xl px-4 py-3 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all placeholder:text-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed",
             className
           )}
-          ref={ref}
           {...props}
         />
       </div>
@@ -79,36 +104,55 @@ export default function PaymentModal({
   course,
   coursePrice = 0,
 }: PaymentModalProps) {
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '', phone: '' });
+  // State
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    countryCode: '+44' 
+  });
+  
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'paypal' | 'paylater'>('razorpay');
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
 
-  // Coupon & Price State
+  // Coupon State
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  
+  // Initialize finalPrice
   const [finalPrice, setFinalPrice] = useState(coursePrice);
 
+  // --- FIXED: Reactive Price Update Logic ---
+  // This ensures finalPrice ALWAYS reflects the coupon state automatically
   useEffect(() => {
-    if (!appliedCoupon) setFinalPrice(coursePrice);
+    if (appliedCoupon?.discount?.finalPrice) {
+      setFinalPrice(appliedCoupon.discount.finalPrice);
+    } else {
+      setFinalPrice(coursePrice);
+    }
   }, [coursePrice, appliedCoupon]);
 
+  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
         setCurrentStep(1);
         setAppliedCoupon(null);
         setCouponCode('');
-        setFinalPrice(coursePrice);
+        // finalPrice resets automatically due to the effect above when appliedCoupon becomes null
         setErrors({});
-        setCustomerInfo({ name: '', email: '', phone: '' });
+        setCustomerInfo({ name: '', email: '', phone: '', countryCode: '+44' });
         setIsProcessing(false);
+        setSelectedPaymentMethod('razorpay');
       }, 300);
     }
-  }, [isOpen, coursePrice]);
+  }, [isOpen]); // Removed coursePrice from dependency to prevent reset loops
+
+  // --- Handlers ---
 
   const handleValidateCoupon = async () => {
     if (!couponCode.trim()) {
@@ -122,13 +166,12 @@ export default function PaymentModal({
       const data = await apiValidateCoupon(couponCode.trim(), course.id);
       if (data.success && data.valid) {
         setAppliedCoupon(data);
-        setFinalPrice(data.discount.finalPrice);
+        // We do NOT setFinalPrice here anymore. The useEffect handles it.
         setCouponError('');
         toast.success('Coupon applied!');
       } else {
         setCouponError(data.error || 'Invalid code');
         setAppliedCoupon(null);
-        setFinalPrice(coursePrice);
       }
     } catch (error) {
       setCouponError('Validation failed');
@@ -147,11 +190,14 @@ export default function PaymentModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const getFullPhone = () => `${customerInfo.countryCode}${customerInfo.phone}`;
+
+  // --- PayPal Handlers ---
   const createOrderHandler = async () => {
     try {
       const response = await createPayPalOrder({
         courseId: course.id,
-        customerInfo,
+        customerInfo: { ...customerInfo, phone: getFullPhone() },
         couponCode: appliedCoupon?.coupon?.code
       });
       
@@ -179,13 +225,23 @@ export default function PaymentModal({
     }
   };
 
+  // --- Razorpay Handler ---
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
+    
+    const isScriptLoaded = await loadRazorpayScript();
+    if (!isScriptLoaded) {
+      toast.error("Razorpay SDK failed to load.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
+      // Create order with the CURRENT finalPrice
       const response = await createPaymentOrder({
         courseId: course.id,
         courseName: course.title,
-        amount: finalPrice,
+        amount: finalPrice, // This will now use the correct discounted price
         currency: 'GBP',
         customerInfo,
         couponCode: appliedCoupon?.coupon?.code
@@ -213,10 +269,18 @@ export default function PaymentModal({
         },
         prefill: { name: customerInfo.name, email: customerInfo.email, contact: customerInfo.phone },
         theme: { color: '#f97316' },
-        modal: { ondismiss: () => setIsProcessing(false) }
+        modal: { 
+          ondismiss: () => setIsProcessing(false)
+        }
       };
 
-      const rzp = new window.Razorpay(options);
+      const rzp = new (window as any).Razorpay(options);
+      
+      rzp.on('payment.failed', function (response: any){
+        toast.error(response.error.description);
+        setIsProcessing(false);
+      });
+
       rzp.open();
     } catch (error: any) {
       toast.error(error.message || 'Payment failed');
@@ -235,7 +299,6 @@ export default function PaymentModal({
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            {/* Backdrop - Kept dark for focus */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -250,7 +313,7 @@ export default function PaymentModal({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg bg-white border border-zinc-200 rounded-3xl shadow-2xl overflow-hidden"
             >
-              {/* Subtle Light Gradients */}
+              {/* Background Gradients */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-orange-100/50 rounded-full blur-3xl -z-10" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-100/50 rounded-full blur-3xl -z-10" />
 
@@ -268,7 +331,7 @@ export default function PaymentModal({
                 </button>
               </div>
 
-              {/* Steps Progress */}
+              {/* Progress Bar */}
               <div className="px-6 py-4">
                 <div className="flex justify-between items-center mb-2 text-[10px] uppercase tracking-wider font-bold text-zinc-400">
                   <span className={cn(currentStep >= 1 && "text-orange-600")}>Details</span>
@@ -284,7 +347,7 @@ export default function PaymentModal({
                 </div>
               </div>
 
-              <div className="p-6 pt-2 min-h-[400px]">
+              <div className="p-6 pt-2 min-h-[420px]">
                 <AnimatePresence mode="wait">
                   
                   {/* --- STEP 1: Details --- */}
@@ -315,7 +378,7 @@ export default function PaymentModal({
                             disabled={!!appliedCoupon}
                           />
                           <button 
-                            onClick={appliedCoupon ? () => { setAppliedCoupon(null); setCouponCode(''); setFinalPrice(coursePrice); } : handleValidateCoupon}
+                            onClick={appliedCoupon ? () => { setAppliedCoupon(null); setCouponCode(''); } : handleValidateCoupon}
                             disabled={isValidatingCoupon || (!couponCode && !appliedCoupon)}
                             className={cn(
                               "absolute right-1 top-1 bottom-1 px-4 rounded-lg text-xs font-bold transition-colors",
@@ -339,8 +402,35 @@ export default function PaymentModal({
                         <LabelInputContainer>
                           <Input placeholder="Email Address" type="email" value={customerInfo.email} onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})} className={errors.email && "border-red-500 focus:border-red-500 focus:ring-red-200"} />
                         </LabelInputContainer>
+                        
                         <LabelInputContainer>
-                          <Input placeholder="Phone Number" type="tel" value={customerInfo.phone} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} className={errors.phone && "border-red-500 focus:border-red-500 focus:ring-red-200"} />
+                          <div className="flex gap-2 h-[46px]">
+                            <div className="relative group min-w-[100px]">
+                              <select 
+                                value={customerInfo.countryCode}
+                                onChange={(e) => setCustomerInfo({...customerInfo, countryCode: e.target.value})}
+                                className="w-full h-full bg-zinc-50 border border-zinc-200 text-zinc-900 text-sm rounded-xl pl-3 pr-8 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none cursor-pointer"
+                              >
+                                {COUNTRY_CODES.map((item) => (
+                                  <option key={item.code + item.country} value={item.code}>
+                                    {item.flag} {item.code}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                                <ChevronRight className="w-4 h-4 rotate-90" />
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <Input 
+                                placeholder="Phone Number" 
+                                type="tel" 
+                                value={customerInfo.phone} 
+                                onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} 
+                                className={cn("h-full", errors.phone && "border-red-500")} 
+                              />
+                            </div>
+                          </div>
                         </LabelInputContainer>
                       </div>
 
@@ -363,7 +453,6 @@ export default function PaymentModal({
                       className="space-y-4"
                     >
                       <div className="space-y-3">
-                        {/* Option 1: Razorpay */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('razorpay')}
                           className={cn(
@@ -381,7 +470,6 @@ export default function PaymentModal({
                           {selectedPaymentMethod === 'razorpay' && <CheckCircle2 className="ml-auto w-5 h-5 text-orange-500" />}
                         </div>
 
-                        {/* Option 2: PayPal Standard */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paypal')}
                           className={cn(
@@ -399,7 +487,6 @@ export default function PaymentModal({
                           {selectedPaymentMethod === 'paypal' && <CheckCircle2 className="ml-auto w-5 h-5 text-yellow-500" />}
                         </div>
 
-                        {/* Option 3: PayPal Pay Later */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paylater')}
                           className={cn(
@@ -432,7 +519,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* --- STEP 3: Confirm --- */}
+                  {/* --- STEP 3: Confirm & Pay --- */}
                   {currentStep === 3 && (
                     <motion.div
                       key="step3"
@@ -443,11 +530,15 @@ export default function PaymentModal({
                     >
                       <div className="py-4">
                         <p className="text-zinc-500 text-sm mb-1 font-medium">Amount to Pay</p>
-                        <h3 className="text-5xl font-bold text-zinc-900 tracking-tight">£{finalPrice}</h3>
+                        <div className="flex items-center justify-center gap-3">
+                          {appliedCoupon && (
+                             <span className="text-zinc-400 line-through text-2xl font-medium decoration-2">£{coursePrice}</span>
+                          )}
+                          <h3 className="text-5xl font-bold text-zinc-900 tracking-tight">£{finalPrice}</h3>
+                        </div>
                       </div>
 
-                      <div className="min-h-[120px]">
-                        {/* CASE 1: RAZORPAY */}
+                      <div className="min-h-[150px]">
                         {selectedPaymentMethod === 'razorpay' && (
                           <button
                             onClick={handleRazorpayPayment}
@@ -459,13 +550,10 @@ export default function PaymentModal({
                           </button>
                         )}
 
-                        {/* CASE 2 & 3: PAYPAL */}
                         {(selectedPaymentMethod === 'paypal' || selectedPaymentMethod === 'paylater') && (
                           <div className="relative z-10 w-full space-y-4">
-                            
-                            {/* Pay Later Message */}
                             {selectedPaymentMethod === 'paylater' && (
-                              <div className="border border-blue-100 rounded-lg p-2 text-zinc-900">
+                              <div className="border border-blue-100 rounded-lg p-2 text-zinc-900 mb-2">
                                 <PayPalMessages 
                                   style={{ layout: "text", text: { align: "center", color: "black" } }}
                                   amount={finalPrice.toString()}
@@ -474,11 +562,15 @@ export default function PaymentModal({
                               </div>
                             )}
 
-                            {/* Smart Buttons */}
                             <PayPalButtons
-                              style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
-                              fundingSource={undefined} 
-                              forceReRender={[finalPrice, course.id, couponCode]}
+                              style={{ 
+                                layout: "vertical", 
+                                color: selectedPaymentMethod === 'paylater' ? "blue" : "gold", 
+                                shape: "rect", 
+                                label: "pay" 
+                              }}
+                              fundingSource={selectedPaymentMethod === 'paylater' ? "paylater" : "paypal"}
+                              forceReRender={[finalPrice, course.id, couponCode, selectedPaymentMethod]}
                               createOrder={createOrderHandler}
                               onApprove={onApproveHandler}
                               onError={(err) => {
