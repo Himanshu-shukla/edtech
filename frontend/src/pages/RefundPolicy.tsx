@@ -117,7 +117,7 @@ export default function RefundPolicy() {
 
             <h2 className="text-2xl font-bold text-gray-900 mb-6">5. Limitations</h2>
             <p className="text-gray-700 leading-relaxed mb-6">
-              <strong>5.1.</strong> This refund policy is an exception to the Company's general no-refund rule and applies only to the 10X Data Analyst and AI program.
+              <strong>5.1.</strong> This refund policy is an exception to the Company's general no-refund rule and applies only to the 10X Data Analyst and Gen AI program.
             </p>
             <p className="text-gray-700 leading-relaxed mb-8">
               <strong>5.2.</strong> The Company reserves the right to modify or terminate this policy at any time, with such changes applying to future enrollments.

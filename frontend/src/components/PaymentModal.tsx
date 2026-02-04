@@ -53,6 +53,7 @@ const LabelInputContainer = ({ children, className }: { children: React.ReactNod
   return <div className={cn("flex flex-col space-y-2 w-full", className)}>{children}</div>;
 };
 
+// Updated Input for Light Theme
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type, ...props }, ref) => {
     return (
@@ -60,7 +61,7 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         <input
           type={type}
           className={cn(
-            "w-full bg-zinc-900/50 border border-zinc-800 text-white text-sm rounded-xl px-4 py-3 outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all placeholder:text-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed",
+            "w-full bg-zinc-50 border border-zinc-200 text-zinc-900 text-sm rounded-xl px-4 py-3 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all placeholder:text-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed",
             className
           )}
           ref={ref}
@@ -146,7 +147,6 @@ export default function PaymentModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Shared Helper for Creating PayPal Order
   const createOrderHandler = async () => {
     try {
       const response = await createPayPalOrder({
@@ -165,7 +165,6 @@ export default function PaymentModal({
     }
   };
 
-  // Shared Helper for Approving PayPal Order
   const onApproveHandler = async (data: any) => {
     try {
       const response = await capturePayPalPayment(data.orderID);
@@ -236,56 +235,59 @@ export default function PaymentModal({
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            {/* Backdrop - Kept dark for focus */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-white border border-zinc-200 rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -z-10" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
+              {/* Subtle Light Gradients */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-100/50 rounded-full blur-3xl -z-10" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-100/50 rounded-full blur-3xl -z-10" />
 
               {/* Header */}
               <div className="p-6 pb-2 flex justify-between items-start">
                 <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-orange-400 mb-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-semibold text-orange-600 mb-3">
                     <Sparkles className="w-3 h-3" />
                     <span>Secure Enrollment</span>
                   </div>
-                  <h2 className="text-2xl font-bold text-white">{course.title}</h2>
+                  <h2 className="text-2xl font-bold text-zinc-900">{course.title}</h2>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full bg-zinc-900 text-zinc-400 hover:text-white transition-colors">
+                <button onClick={onClose} className="p-2 rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Progress Bar */}
+              {/* Steps Progress */}
               <div className="px-6 py-4">
-                <div className="flex justify-between items-center mb-2 text-[10px] uppercase tracking-wider font-bold text-zinc-500">
-                  <span className={cn(currentStep >= 1 && "text-orange-400")}>Details</span>
-                  <span className={cn(currentStep >= 2 && "text-orange-400")}>Method</span>
-                  <span className={cn(currentStep >= 3 && "text-orange-400")}>Payment</span>
+                <div className="flex justify-between items-center mb-2 text-[10px] uppercase tracking-wider font-bold text-zinc-400">
+                  <span className={cn(currentStep >= 1 && "text-orange-600")}>Details</span>
+                  <span className={cn(currentStep >= 2 && "text-orange-600")}>Method</span>
+                  <span className={cn(currentStep >= 3 && "text-orange-600")}>Payment</span>
                 </div>
-                <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: "33%" }}
                     animate={{ width: `${(currentStep / 3) * 100}%` }}
-                    className="h-full bg-gradient-to-r from-orange-600 to-yellow-500" 
+                    className="h-full bg-gradient-to-r from-orange-500 to-yellow-500" 
                   />
                 </div>
               </div>
 
               <div className="p-6 pt-2 min-h-[400px]">
                 <AnimatePresence mode="wait">
-                  {/* STEP 1: Details */}
+                  
+                  {/* --- STEP 1: Details --- */}
                   {currentStep === 1 && (
                     <motion.div
                       key="step1"
@@ -294,14 +296,16 @@ export default function PaymentModal({
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-5"
                     >
-                      <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex justify-between items-center">
+                      {/* Price Summary */}
+                      <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl flex justify-between items-center shadow-sm">
                         <div>
-                          <p className="text-zinc-400 text-sm">Total Fee</p>
-                          {appliedCoupon && <span className="text-xs text-zinc-600 line-through">£{coursePrice}</span>}
+                          <p className="text-zinc-500 text-sm font-medium">Total Fee</p>
+                          {appliedCoupon && <span className="text-xs text-zinc-400 line-through">£{coursePrice}</span>}
                         </div>
-                        <span className="text-2xl font-bold text-white">£{finalPrice}</span>
+                        <span className="text-2xl font-bold text-zinc-900">£{finalPrice}</span>
                       </div>
 
+                      {/* Coupon Field */}
                       <LabelInputContainer>
                         <div className="flex gap-2 relative">
                           <Input 
@@ -315,94 +319,112 @@ export default function PaymentModal({
                             disabled={isValidatingCoupon || (!couponCode && !appliedCoupon)}
                             className={cn(
                               "absolute right-1 top-1 bottom-1 px-4 rounded-lg text-xs font-bold transition-colors",
-                              appliedCoupon ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : "bg-zinc-800 text-white hover:bg-zinc-700"
+                              appliedCoupon 
+                                ? "bg-red-50 text-red-600 hover:bg-red-100" 
+                                : "bg-zinc-900 text-white hover:bg-zinc-800 disabled:bg-zinc-200"
                             )}
                           >
                             {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin"/> : appliedCoupon ? "Remove" : "Apply"}
                           </button>
                         </div>
-                        {couponError && <p className="text-red-400 text-xs px-1">{couponError}</p>}
-                        {appliedCoupon && <p className="text-emerald-400 text-xs px-1">Code applied!</p>}
+                        {couponError && <p className="text-red-500 text-xs px-1 font-medium">{couponError}</p>}
+                        {appliedCoupon && <p className="text-emerald-600 text-xs px-1 font-medium">Code applied successfully!</p>}
                       </LabelInputContainer>
 
+                      {/* User Form */}
                       <div className="space-y-4">
                         <LabelInputContainer>
-                          <Input placeholder="Full Name" value={customerInfo.name} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} className={errors.name && "border-red-500/50"} />
+                          <Input placeholder="Full Name" value={customerInfo.name} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} className={errors.name && "border-red-500 focus:border-red-500 focus:ring-red-200"} />
                         </LabelInputContainer>
                         <LabelInputContainer>
-                          <Input placeholder="Email Address" type="email" value={customerInfo.email} onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})} className={errors.email && "border-red-500/50"} />
+                          <Input placeholder="Email Address" type="email" value={customerInfo.email} onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})} className={errors.email && "border-red-500 focus:border-red-500 focus:ring-red-200"} />
                         </LabelInputContainer>
                         <LabelInputContainer>
-                          <Input placeholder="Phone Number" type="tel" value={customerInfo.phone} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} className={errors.phone && "border-red-500/50"} />
+                          <Input placeholder="Phone Number" type="tel" value={customerInfo.phone} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} className={errors.phone && "border-red-500 focus:border-red-500 focus:ring-red-200"} />
                         </LabelInputContainer>
                       </div>
 
                       <button
                         onClick={() => { if(validateForm()) setCurrentStep(2); }}
-                        className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                        className="w-full bg-zinc-900 text-white font-bold py-3.5 rounded-xl hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-zinc-200"
                       >
                         Continue <ChevronRight className="w-4 h-4" />
                       </button>
                     </motion.div>
                   )}
 
-                  {/* STEP 2: Method */}
+                  {/* --- STEP 2: Method --- */}
                   {currentStep === 2 && (
                     <motion.div
                       key="step2"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+                      className="space-y-4"
                     >
                       <div className="space-y-3">
-                        {/* 1. Razorpay */}
+                        {/* Option 1: Razorpay */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('razorpay')}
                           className={cn(
                             "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
-                            selectedPaymentMethod === 'razorpay' ? "bg-zinc-800 border-orange-500 shadow-lg shadow-orange-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                            selectedPaymentMethod === 'razorpay' 
+                              ? "bg-orange-50 border-orange-500 shadow-md" 
+                              : "bg-white border-zinc-200 hover:bg-zinc-50"
                           )}
                         >
-                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-orange-500"><CreditCard className="w-6 h-6" /></div>
-                          <div><h3 className="font-bold text-white">Razorpay</h3><p className="text-xs text-zinc-500">UPI, Cards, Netbanking</p></div>
+                          <div className="p-3 rounded-xl bg-white border border-zinc-100 text-orange-500 shadow-sm"><CreditCard className="w-6 h-6" /></div>
+                          <div>
+                            <h3 className="font-bold text-zinc-900">Razorpay</h3>
+                            <p className="text-xs text-zinc-500">UPI, Cards, Netbanking</p>
+                          </div>
                           {selectedPaymentMethod === 'razorpay' && <CheckCircle2 className="ml-auto w-5 h-5 text-orange-500" />}
                         </div>
 
-                        {/* 2. PayPal Standard */}
+                        {/* Option 2: PayPal Standard */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paypal')}
                           className={cn(
                             "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
-                            selectedPaymentMethod === 'paypal' ? "bg-zinc-800 border-yellow-500 shadow-lg shadow-yellow-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                            selectedPaymentMethod === 'paypal' 
+                              ? "bg-yellow-50 border-yellow-500 shadow-md" 
+                              : "bg-white border-zinc-200 hover:bg-zinc-50"
                           )}
                         >
-                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-yellow-500"><Wallet className="w-6 h-6" /></div>
-                          <div><h3 className="font-bold text-white">PayPal</h3><p className="text-xs text-zinc-500">One-Time Payment</p></div>
+                          <div className="p-3 rounded-xl bg-white border border-zinc-100 text-yellow-600 shadow-sm"><Wallet className="w-6 h-6" /></div>
+                          <div>
+                            <h3 className="font-bold text-zinc-900">PayPal</h3>
+                            <p className="text-xs text-zinc-500">One-Time Payment</p>
+                          </div>
                           {selectedPaymentMethod === 'paypal' && <CheckCircle2 className="ml-auto w-5 h-5 text-yellow-500" />}
                         </div>
 
-                        {/* 3. PayPal Pay Later */}
+                        {/* Option 3: PayPal Pay Later */}
                         <div 
                           onClick={() => setSelectedPaymentMethod('paylater')}
                           className={cn(
                             "cursor-pointer rounded-2xl border p-4 transition-all duration-300 flex items-center gap-4",
-                            selectedPaymentMethod === 'paylater' ? "bg-zinc-800 border-blue-500 shadow-lg shadow-blue-900/20" : "bg-zinc-900/30 border-zinc-800 hover:bg-zinc-800"
+                            selectedPaymentMethod === 'paylater' 
+                              ? "bg-blue-50 border-blue-500 shadow-md" 
+                              : "bg-white border-zinc-200 hover:bg-zinc-50"
                           )}
                         >
-                          <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-blue-500"><Clock className="w-6 h-6" /></div>
-                          <div><h3 className="font-bold text-white">Pay Later</h3><p className="text-xs text-zinc-500">3 Interest-Free Installments</p></div>
+                          <div className="p-3 rounded-xl bg-white border border-zinc-100 text-blue-600 shadow-sm"><Clock className="w-6 h-6" /></div>
+                          <div>
+                            <h3 className="font-bold text-zinc-900">Pay Later</h3>
+                            <p className="text-xs text-zinc-500">3 Interest-Free Installments</p>
+                          </div>
                           {selectedPaymentMethod === 'paylater' && <CheckCircle2 className="ml-auto w-5 h-5 text-blue-500" />}
                         </div>
                       </div>
 
                       <div className="flex gap-3 mt-8">
-                        <button onClick={() => setCurrentStep(1)} className="p-3 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white">
+                        <button onClick={() => setCurrentStep(1)} className="p-3 rounded-xl bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 transition-colors">
                           <ArrowLeft className="w-5 h-5" />
                         </button>
                         <button 
                           onClick={() => setCurrentStep(3)} 
-                          className="flex-1 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-900/20"
+                          className="flex-1 bg-zinc-900 text-white font-bold rounded-xl shadow-lg hover:bg-zinc-800 transition-all"
                         >
                           Review & Pay
                         </button>
@@ -410,7 +432,7 @@ export default function PaymentModal({
                     </motion.div>
                   )}
 
-                  {/* STEP 3: Confirm (Logic Branching) */}
+                  {/* --- STEP 3: Confirm --- */}
                   {currentStep === 3 && (
                     <motion.div
                       key="step3"
@@ -420,8 +442,8 @@ export default function PaymentModal({
                       className="space-y-8 text-center"
                     >
                       <div className="py-4">
-                        <p className="text-zinc-500 text-sm mb-1">Amount to Pay</p>
-                        <h3 className="text-5xl font-bold text-white">£{finalPrice}</h3>
+                        <p className="text-zinc-500 text-sm mb-1 font-medium">Amount to Pay</p>
+                        <h3 className="text-5xl font-bold text-zinc-900 tracking-tight">£{finalPrice}</h3>
                       </div>
 
                       <div className="min-h-[120px]">
@@ -430,33 +452,32 @@ export default function PaymentModal({
                           <button
                             onClick={handleRazorpayPayment}
                             disabled={isProcessing}
-                            className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                            className="w-full bg-zinc-900 text-white font-bold py-4 rounded-xl hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-xl shadow-zinc-200"
                           >
                             {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                             {isProcessing ? "Processing..." : "Secure Pay"}
                           </button>
                         )}
 
-                        {/* CASE 2 & 3: PAYPAL (Standard OR PayLater) */}
-                        {/* We use one unified PayPal Buttons container with fundingSource={undefined} so PayPal handles the stacking logic */}
+                        {/* CASE 2 & 3: PAYPAL */}
                         {(selectedPaymentMethod === 'paypal' || selectedPaymentMethod === 'paylater') && (
                           <div className="relative z-10 w-full space-y-4">
                             
-                            {/* If 'paylater' selected in Step 2, show the banner message to reinforce the choice */}
+                            {/* Pay Later Message */}
                             {selectedPaymentMethod === 'paylater' && (
-                              <div className="bg-white rounded-lg p-2 text-black">
+                              <div className="border border-blue-100 rounded-lg p-2 text-zinc-900">
                                 <PayPalMessages 
-                                  style={{ layout: "text", text: { align: "center" } }}
+                                  style={{ layout: "text", text: { align: "center", color: "black" } }}
                                   amount={finalPrice.toString()}
                                   forceReRender={[finalPrice]}
                                 />
                               </div>
                             )}
 
-                            {/* The Smart Button Stack. PayPal automatically decides if PayLater button appears. */}
+                            {/* Smart Buttons */}
                             <PayPalButtons
                               style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
-                              fundingSource={undefined} // Allows both Gold (Pay) and Blue (Pay Later) buttons to render if eligible
+                              fundingSource={undefined} 
                               forceReRender={[finalPrice, course.id, couponCode]}
                               createOrder={createOrderHandler}
                               onApprove={onApproveHandler}
@@ -471,8 +492,8 @@ export default function PaymentModal({
                         )}
                       </div>
 
-                      <button onClick={() => setCurrentStep(2)} className="text-zinc-500 hover:text-white text-sm">
-                        Change Method
+                      <button onClick={() => setCurrentStep(2)} className="text-zinc-400 hover:text-zinc-600 text-sm font-medium transition-colors">
+                        Change Payment Method
                       </button>
                     </motion.div>
                   )}

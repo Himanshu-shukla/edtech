@@ -72,8 +72,8 @@ export const courseDetails = [
       { label: "Avg Salary Hike", value: "65%", color: "orange" },
     ],
     pricing: {
-      current: 49999,
-      original: 89999,
+      current: 2999,
+      original: 3999,
       discount: "44% OFF",
       deadline: "Limited Time Offer",
       features: [
@@ -176,9 +176,9 @@ export const courseDetails = [
       { label: "Avg Salary", value: "₹18 LPA", color: "orange" },
     ],
     pricing: {
-      current: 199999,
-      original: 299999,
-      discount: "33% OFF",
+      current: 2999,
+      original: 3999,
+      discount: "25% OFF",
       deadline: "Admissions Closing Soon",
       features: [
         { text: "Research Mentorship", icon: "mentor" },

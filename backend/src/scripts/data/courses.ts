@@ -3,7 +3,7 @@ export const courses = [
     id: 'data-analytics',
     category: 'DATA ANALYTICS',
     badge: 'FEATURED',
-    title: '10x Data Analyst and AI Complete Certification with Microsoft',
+    title: '10x Data Analyst and Gen AI Complete Certification with Microsoft',
     desc: 'Master data analysis, AI, and Microsoft tools with hands-on projects that prepare you for real-world challenges.',
     duration: '6 Months',
     extra: '25+ Live Projects',
