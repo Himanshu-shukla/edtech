@@ -23,6 +23,7 @@
     "@types/node": "^20.8.0",
     "@types/nodemailer": "^7.0.1",
     "@types/paypal__checkout-server-sdk": "^1.0.8",
+    "axios": "^1.13.4",
     "bcryptjs": "^3.0.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -37,7 +38,7 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "razorpay": "^2.9.6",
-    "typescript": "^5.2.2" 
+    "typescript": "^5.2.2"
   },
   "devDependencies": {
     "tsx": "^4.0.0"

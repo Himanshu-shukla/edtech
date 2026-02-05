@@ -1,6 +1,18 @@
 import { Request, Response } from 'express';
 import { InquiryModel, CustomerModel, InquiryType } from '../models';
 import { generateInquiryId, generateCustomerId } from '../utils/idGenerator';
+import axios from 'axios';
+
+interface LeadApiPayload {
+  name: string;
+  email: string;
+  phone: string;
+  position: string;
+  folder: string;
+  source: string;
+  priority: string;
+  notes: string;
+}
 
 // Submit contact form
 export const submitContactForm = async (req: Request, res: Response): Promise<void> => {
@@ -54,9 +66,16 @@ export const submitContactForm = async (req: Request, res: Response): Promise<vo
 // Submit strategy call booking
 export const submitStrategyCall = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, phone, source = 'strategy_call_modal' } = req.body;
+    // 1. Destructure fields from the request
+    const { 
+      name, 
+      email, 
+      phone, 
+      source = 'strategy_call_modal',
+      position = 'Data Analytics & Gen AI' 
+    } = req.body;
 
-    // Validate required fields
+    // 2. Validate required fields
     if (!name || !email || !phone) {
       res.status(400).json({
         success: false,
@@ -65,7 +84,7 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Create inquiry record
+    // 3. Create and Save to Local InquiryModel (Your existing logic)
     const inquiry = new InquiryModel({
       id: generateInquiryId(),
       name: name.trim(),
@@ -81,6 +100,31 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
 
     await inquiry.save();
 
+    try {
+      const leadPayload = {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        position: position,
+        folder: "website",
+        source: source || "Manual",
+        priority: "Medium",
+        notes: `Strategy call booking. Source: ${source}`
+      };
+
+      await axios.post('https://api.leads.edtechinformative.uk/api/leads', leadPayload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log(`Lead successfully synced to external API for ${email}`);
+
+    } catch (externalApiError) {
+      console.error('Failed to sync lead to external API:', externalApiError);
+    }
+
+    // 5. Send Success Response
     res.status(201).json({
       success: true,
       message: 'Strategy call booked successfully! Our team will contact you within 24 hours.',
