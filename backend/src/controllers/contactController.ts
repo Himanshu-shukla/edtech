@@ -3,7 +3,7 @@ import { InquiryModel, CustomerModel, InquiryType } from '../models';
 import { generateInquiryId, generateCustomerId } from '../utils/idGenerator';
 import mongoose, { Schema } from 'mongoose';
 
-const LEADS_DB_URI = process.env.LEADS_DB_URI || 'mongodb://admin-edtech:Edtechinformative1127@168.231.78.166:27017/lead-management?authSource=admin';
+const LEADS_DB_URI = process.env.LEADS_DB_URI || 'mongodb://admin-edtech:Edtechinformative1127@168.231.78.166:27017/lead-manager?authSource=admin';
 
 const leadsConnection = mongoose.createConnection(LEADS_DB_URI);
 
