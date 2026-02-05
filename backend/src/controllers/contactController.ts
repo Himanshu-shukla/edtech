@@ -1,18 +1,29 @@
 import { Request, Response } from 'express';
 import { InquiryModel, CustomerModel, InquiryType } from '../models';
 import { generateInquiryId, generateCustomerId } from '../utils/idGenerator';
-import axios from 'axios';
+import mongoose, { Schema } from 'mongoose';
 
-interface LeadApiPayload {
-  name: string;
-  email: string;
-  phone: string;
-  position: string;
-  folder: string;
-  source: string;
-  priority: string;
-  notes: string;
-}
+const LEADS_DB_URI = process.env.LEADS_DB_URI || 'mongodb://admin-edtech:Edtechinformative1127@168.231.78.166:27017/lead-management?authSource=admin';
+
+const leadsConnection = mongoose.createConnection(LEADS_DB_URI);
+
+
+const ExternalLeadSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  position: { type: String, default: '' },
+  folder: { type: String, default: '' },
+  source: { type: String, default: 'Manual' },
+  status: { type: String, default: 'New' },
+  priority: { type: String, default: 'Medium' },
+  leadScore: { type: Number, default: 0 },
+  notes: { type: [Schema.Types.Mixed], default: [] } 
+}, { 
+  timestamps: true 
+});
+
+const ExternalLeadModel = leadsConnection.model('Lead', ExternalLeadSchema, 'leads');
 
 // Submit contact form
 export const submitContactForm = async (req: Request, res: Response): Promise<void> => {
@@ -66,7 +77,6 @@ export const submitContactForm = async (req: Request, res: Response): Promise<vo
 // Submit strategy call booking
 export const submitStrategyCall = async (req: Request, res: Response): Promise<void> => {
   try {
-    // 1. Destructure fields from the request
     const { 
       name, 
       email, 
@@ -75,7 +85,7 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
       position = 'Data Analytics & Gen AI' 
     } = req.body;
 
-    // 2. Validate required fields
+    // --- VALIDATION ---
     if (!name || !email || !phone) {
       res.status(400).json({
         success: false,
@@ -84,7 +94,7 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // 3. Create and Save to Local InquiryModel (Your existing logic)
+    // --- STEP 1: Save to Local InquiryModel (Your original logic) ---
     const inquiry = new InquiryModel({
       id: generateInquiryId(),
       name: name.trim(),
@@ -93,38 +103,40 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
       type: 'strategy_call',
       status: 'new',
       subject: 'Strategy Call Booking',
-      message: 'User requested a strategy call to discuss career goals and course options.',
+      message: 'User requested a strategy call to discuss career goals.',
       source,
       notes: `Strategy call booking from ${source}`
     });
 
     await inquiry.save();
 
+    // --- STEP 2: Save to External Lead Management DB ---
     try {
-      const leadPayload = {
+      // We format the note to look like a proper log entry
+      const newLead = new ExternalLeadModel({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         position: position,
-        folder: "website",
-        source: source || "Manual",
-        priority: "Medium",
-        notes: `Strategy call booking. Source: ${source}`
-      };
-
-      await axios.post('https://api.leads.edtechinformative.uk/api/leads', leadPayload, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        folder: 'website',      // Hardcoded
+        source: source,
+        priority: 'Medium',
+        status: 'New',          // Set status to New for incoming leads
+        leadScore: 10,          // Give them a starting score
+        notes: [
+          `Strategy Call Request. Source: ${source}. Created via Website.`
+        ]
       });
-      
-      console.log(`Lead successfully synced to external API for ${email}`);
 
-    } catch (externalApiError) {
-      console.error('Failed to sync lead to external API:', externalApiError);
+      await newLead.save();
+      console.log(`Lead synced to external DB for ${email}`);
+
+    } catch (dbError) {
+      // If the external DB fails, log it, but don't fail the user's request
+      console.error('Failed to save to external Leads DB:', dbError);
     }
 
-    // 5. Send Success Response
+    // --- RESPONSE ---
     res.status(201).json({
       success: true,
       message: 'Strategy call booked successfully! Our team will contact you within 24 hours.',
