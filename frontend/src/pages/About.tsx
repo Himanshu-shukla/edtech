@@ -4,12 +4,11 @@ import {
   motion,
   useScroll,
   useSpring,
-  useTransform,
 } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { 
   ArrowRight, Sparkles, Target, Heart, 
-  Users, Zap, Trophy, History 
+  Users, Zap, Trophy 
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";

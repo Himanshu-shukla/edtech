@@ -132,8 +132,8 @@ export const whatsappQuickMessages = [
 
 // Company information including WhatsApp and hero data
 export const companyInfo = {
-  whatsappNumber: "+919643274676",
-  supportEmail: "support@edtechinformative.uk",
+  whatsappNumber: "+447441477106",
+  supportEmail: "admissions@edtechinformative.uk",
   heroRoles: [
     "Data • AI",
     "Generative AI",

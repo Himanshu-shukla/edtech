@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, ArrowDown, CheckCircle2 } from 'lucide-react';
+import { Target, ArrowDown } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -18,21 +18,21 @@ const desktopImages = [
     id: 1,
     title: "Continuous Feedback",
     desc: "Personalized insights to accelerate your growth.",
-    src: '../src/assets/Mithilesh Kumar — Business Analyst “The program gave me strong practical exposure with real-world case studies. The mentors were supportive and the curriculum was well structured, helping me build.jpg',
+    src: '../assets/Mithilesh Kumar — Business Analyst “The program gave me strong practical exposure with real-world case studies. The mentors were supportive and the curriculum was well structured, helping me build.jpg',
     color: "from-blue-500 to-cyan-500"
   },
   {
     id: 2,
     title: "Expert Mentorship",
     desc: "1-on-1 guidance from industry veterans.",
-    src: `../src/assets/Rakul Mehta - Senior Data Scientist, Microsoft The mentor's video session gave me real insights into industry practices. His practical tips and guidance were easy to apply and boosted my confidenc.png`,
+    src: `../assets/Rakul Mehta - Senior Data Scientist, Microsoft The mentor's video session gave me real insights into industry practices. His practical tips and guidance were easy to apply and boosted my confidenc.png`,
     color: "from-emerald-500 to-green-500"
   },
   {
     id: 3,
     title: "Global Certification",
     desc: "Credentials that validate your expertise worldwide.",
-    src: '../src/assets/Earn Industry-Recognized Certifications Validate your skills with credentials that boost your career and open global opportunities.jpg',
+    src: '../assets/Earn Industry-Recognized Certifications Validate your skills with credentials that boost your career and open global opportunities.jpg',
     color: "from-orange-500 to-red-500"
   },
   {

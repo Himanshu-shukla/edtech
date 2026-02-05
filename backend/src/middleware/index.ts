@@ -132,7 +132,8 @@ const allowedOrigins: (string | RegExp)[] = [
   process.env.DATA_ANALYST_URL_WWW ,
   process.env.DATA_ANALYST_2_URL,
   process.env.DATA_ANALYST_2_URL_WWW
-].filter((o): o is string => !!o); // removes undefined
+].filter((o): o is string => !!o)
+.map(url => url.replace(/\/$/, ""));
 // CORS configuration
 export const corsOptions = {
   origin: process.env.NODE_ENV === 'development' 

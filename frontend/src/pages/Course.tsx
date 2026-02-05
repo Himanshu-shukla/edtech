@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
 import toast from 'react-hot-toast';
 import { 
-  ArrowRight, Sparkles, Clock, Calendar, Users, 
-  CheckCircle2, ChevronDown, Play, Zap, Star, ShieldCheck,
+  ArrowRight, Sparkles, Clock, Users, 
+  CheckCircle2, ChevronDown, Zap, Star, ShieldCheck,
   // Imported Icons
   BarChart, // Changed from BarChart3 to BarChart for better compatibility
   Award, 
