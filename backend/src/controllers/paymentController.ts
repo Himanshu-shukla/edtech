@@ -22,6 +22,7 @@ const razorpay = new Razorpay({
 let paypalService: PayPalService | null = null;
 try {
   paypalService = new PayPalService();
+  console.log("there is a catch")
 } catch (error) {
   console.warn('PayPal service initialization failed:', error);
   // PayPal service will be null, and we'll handle this in the endpoints

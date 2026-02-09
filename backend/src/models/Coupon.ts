@@ -198,7 +198,7 @@ CouponSchema.methods.calculateDiscount = function(this: ICoupon, originalPrice: 
 CouponSchema.statics.validateCoupon = async function(code: string, courseId: string, originalPrice: number) {
   const coupon = await this.findOne({ 
     code: code.toUpperCase(), 
-    courseIds: courseId,
+    // courseIds: courseId,
     isActive: true 
   });
   

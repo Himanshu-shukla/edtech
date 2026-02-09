@@ -13,7 +13,7 @@ import { requireAdminAuth } from '../middleware/auth';
 const router = Router();
 
 // Public routes
-router.post('/validate', validateCoupon);
+router.get('/validate', validateCoupon);
 
 // Admin only routes
 router.get('/admin', requireAdminAuth, getAllCoupons);

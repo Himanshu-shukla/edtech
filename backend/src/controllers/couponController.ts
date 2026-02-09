@@ -1,43 +1,71 @@
 import { Request, Response } from 'express';
 import { CouponModel } from '../models';
+import { CoursePricingModel } from '../models/Course';
 
 // Validate coupon for frontend use
 export const validateCoupon = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { couponCode, courseId, originalPrice } = req.body;
+    const code = typeof req.query.code === 'string' ? req.query.code : undefined;
+    const courseId = typeof req.query.courseId === 'string' ? req.query.courseId : undefined;
 
-    // Validate required fields
-    if (!couponCode || !courseId || !originalPrice) {
+    if (!code || !courseId) {
       res.status(400).json({
         success: false,
-        error: 'Coupon code, course ID, and original price are required'
+        error: 'Coupon code and course ID are required'
       });
       return;
     }
 
-    // Validate original price
+    const coursePricing = await CoursePricingModel.findOne({ id: courseId });
+
+    if (!coursePricing) {
+      res.status(404).json({
+        success: false,
+        error: 'Course pricing not found'
+      });
+      return;
+    }
+
+    const originalPrice = coursePricing.originalPrice;
+
     if (typeof originalPrice !== 'number' || originalPrice <= 0) {
       res.status(400).json({
         success: false,
-        error: 'Invalid original price'
+        error: 'Invalid course price'
       });
       return;
     }
 
     try {
-      // Validate coupon using static method
-      const coupon = await CouponModel.validateCoupon(couponCode, courseId, originalPrice);
+      // 4️⃣ Validate coupon
+      const coupon = await CouponModel.validateCoupon(
+        code,
+        courseId,
+        originalPrice
+      );
+
+      // 5️⃣ Calculate discount
       const discountInfo = coupon.calculateDiscount(originalPrice);
 
+      // 6️⃣ Response
       res.json({
         success: true,
         valid: true,
+
+        course: {
+          id: coursePricing.id,
+          name: coursePricing.name,
+          originalPrice,
+          currentPrice: coursePricing.currentPrice
+        },
+
         coupon: {
           code: coupon.code,
           description: coupon.description,
           discountType: coupon.discountType,
           discountValue: coupon.discountValue
         },
+
         discount: {
           type: coupon.discountType,
           value: coupon.discountValue,
@@ -46,6 +74,7 @@ export const validateCoupon = async (req: Request, res: Response): Promise<void>
           savings: discountInfo.savings
         }
       });
+
     } catch (couponError: any) {
       res.status(400).json({
         success: false,
@@ -53,6 +82,7 @@ export const validateCoupon = async (req: Request, res: Response): Promise<void>
         error: couponError.message
       });
     }
+
   } catch (error) {
     console.error('Error validating coupon:', error);
     res.status(500).json({
