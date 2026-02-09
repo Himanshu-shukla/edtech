@@ -42,9 +42,9 @@ const Marquee = ({
 }) => {
   return (
     <div className="relative flex overflow-hidden group">
-      {/* Gradient Masks for fade effect */}
-      <div className="absolute top-0 left-0 z-10 h-full w-24 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 z-10 h-full w-24 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
+      {/* Gradient Masks for fade effect - Updated to Light Theme (Slate-50) */}
+      <div className="absolute top-0 left-0 z-10 h-full w-24 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 z-10 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       
       <motion.div
         initial={{ x: direction === "left" ? 0 : "-50%" }}
@@ -60,14 +60,12 @@ const Marquee = ({
         {[...items, ...items, ...items, ...items].map((company, idx) => (
           <div 
             key={`${company.name}-${idx}`} 
-            className="relative group/card flex items-center justify-center min-w-[140px] h-20 rounded-xl bg-zinc-900/40 border border-white/5 backdrop-blur-sm transition-all duration-300 hover:bg-zinc-800 hover:border-white/10 hover:shadow-lg hover:shadow-emerald-500/10"
+            // Light Theme Card: White bg, slate border, soft shadow
+            className="relative group/card flex items-center justify-center min-w-[140px] h-20 rounded-xl bg-white border border-slate-200 shadow-sm transition-all duration-300 hover:bg-white hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/10"
           >
             <img 
               src={company.logo} 
               alt={company.name}
-              // --- CHANGES MADE HERE ---
-              // Removed: opacity-40 grayscale group-hover/card:grayscale-0 group-hover/card:opacity-100
-              // Kept: The scaling effect on hover
               className="h-8 w-auto object-contain transition-all duration-300 group-hover/card:scale-110"
               loading="lazy"
             />
@@ -85,10 +83,11 @@ export default function CompanyShowcase() {
   const row3 = companies.slice(16);
 
   return (
-    <section className="relative py-12 bg-zinc-950 overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+    // Light Theme Background: slate-50
+    <section className="relative py-12 bg-slate-50 overflow-hidden">
+      {/* Background Decor - Adjusted opacity for light mode */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
       
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         
@@ -98,7 +97,8 @@ export default function CompanyShowcase() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-semibold text-emerald-400 mb-6"
+            // Light Theme Badge: White bg, slate border, darker text
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-semibold text-emerald-600 mb-6 shadow-sm"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -106,15 +106,17 @@ export default function CompanyShowcase() {
             </span>
             YOUR GATEWAY TO GLOBAL CAREERS
           </motion.div>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight leading-tight"
+            // Light Theme Heading: Slate-900
+            className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight leading-tight"
           >
             Join alumni working at <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
+            {/* Gradient darkened slightly for contrast against white */}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600">
               world-class companies
             </span>
           </motion.h2>
@@ -124,17 +126,18 @@ export default function CompanyShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-zinc-400"
+            // Light Theme Text: Slate-500
+            className="text-lg text-slate-500"
           >
-            From <span className="text-white font-medium">Silicon Valley</span> to <span className="text-white font-medium">Fortune 500 firms</span>, our graduates are shaping the future of technology across the globe.
+            From <span className="text-slate-900 font-semibold">Silicon Valley</span> to <span className="text-slate-900 font-semibold">Fortune 500 firms</span>, our graduates are shaping the future of technology across the globe.
           </motion.p>
         </div>
 
         {/* Marquee Rows */}
         <div className="space-y-8 relative">
-          {/* Vertical fade masks for the whole block */}
-          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-zinc-950 to-transparent z-20 pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-zinc-950 to-transparent z-20 pointer-events-none" />
+          {/* Vertical fade masks - Updated to Slate-50 */}
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-50 to-transparent z-20 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-50 to-transparent z-20 pointer-events-none" />
           
           <motion.div
              initial={{ opacity: 0 }}
@@ -157,11 +160,13 @@ export default function CompanyShowcase() {
           transition={{ delay: 0.4 }}
           className="mt-16 text-center"
         >
-          <div className="inline-block p-[1px] rounded-2xl bg-gradient-to-r from-transparent via-zinc-700 to-transparent">
-            <div className="px-8 py-4 bg-zinc-950 rounded-2xl relative overflow-hidden">
+          {/* Border Wrapper: Slate-300 */}
+          <div className="inline-block p-[1px] rounded-2xl bg-gradient-to-r from-transparent via-slate-300 to-transparent">
+            {/* Inner Content: White bg */}
+            <div className="px-8 py-4 bg-white rounded-2xl relative overflow-hidden shadow-sm">
                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-[1px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
-               <p className="text-zinc-400 text-sm font-medium">
-                 Trusted by over <span className="text-white font-bold">500+ Hiring Partners</span> worldwide
+               <p className="text-slate-500 text-sm font-medium">
+                 Trusted by over <span className="text-slate-900 font-bold">500+ Hiring Partners</span> worldwide
                </p>
             </div>
           </div>

@@ -44,6 +44,7 @@ interface PaymentModalProps {
   onClose: () => void;
   course: Course;
   coursePrice?: number;
+  source?: string;
 }
 
 interface CustomerInfo {
