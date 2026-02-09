@@ -44,7 +44,7 @@ interface PaymentModalProps {
   onClose: () => void;
   course: Course;
   coursePrice?: number;
-  source?: string;
+  source?: string
 }
 
 interface CustomerInfo {
@@ -67,6 +67,20 @@ const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   return <div className={cn("flex flex-col space-y-2 w-full", className)}>{children}</div>;
 };
+
+function loadScript(src: string) {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+}
 
 // Dark Theme Input Component
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
@@ -99,7 +113,7 @@ export default function PaymentModal({
     name: '', 
     email: '', 
     phone: '', 
-    countryCode: '+44' 
+    countryCode: '+44'  
   });
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -211,16 +225,29 @@ export default function PaymentModal({
 
   // --- Razorpay Handler ---
   const handleRazorpayPayment = async () => {
-    if(!validateForm()) return;
+    if (!validateForm()) return;
     setIsProcessing(true);
-    
+
+    // 1. Load Script (from previous fix)
+    const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    if (!res) {
+      toast.error("Razorpay SDK failed to load");
+      setIsProcessing(false);
+      return;
+    }
+
+    // 2. SANITIZE: Remove any spaces or special chars from the phone number
+    const cleanPhone = customerInfo.phone.replace(/\D/g, ''); 
+    const formattedContact = `${customerInfo.countryCode}${cleanPhone}`;
+
     try {
+      // Use the formatted contact in your API call
       const response = await createPaymentOrder({
         courseId: course.id,
         courseName: course.title,
         amount: finalPrice,
         currency: 'GBP',
-        customerInfo: { ...customerInfo, phone: getFullPhone() }, // Use Full Phone
+        customerInfo: { ...customerInfo, phone: formattedContact }, 
         couponCode: appliedCoupon?.coupon?.code
       });
 
@@ -244,11 +271,16 @@ export default function PaymentModal({
             toast.error('Verification failed');
           }
         },
-        prefill: { 
-          name: customerInfo.name, 
-          email: customerInfo.email, 
-          contact: getFullPhone() 
+        prefill: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          contact: formattedContact, // <--- USE THE SANITIZED STRING HERE
         },
+        // Optional: This forces Razorpay to NOT let the user edit the phone/email
+        // readonly: {
+        //   contact: true,
+        //   email: true,
+        // },
         theme: { color: '#f97316' },
         modal: { ondismiss: () => setIsProcessing(false) }
       };
@@ -542,7 +574,7 @@ export default function PaymentModal({
                             
                             {/* Pay Later Message - Shows if Pay Later is selected in Step 2 */}
                             {selectedPaymentMethod === 'paylater' && (
-                              <div className="p-2 mb-2 min-h-[40px]">
+                              <div className="rounded-lg p-2 mb-2 min-h-[40px]">
                                 <PayPalMessages 
                                   style={{ layout: "text", text: { align: "center", color: "white" } }}
                                   amount={finalPrice.toString()}
