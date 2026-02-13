@@ -26,6 +26,7 @@ export interface Inquiry {
   name: string;
   email: string;
   phone: string;
+  whatsapp?: string;
   type: InquiryType;
   status: InquiryStatus;
   subject?: string;

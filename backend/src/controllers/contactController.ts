@@ -12,6 +12,7 @@ const ExternalLeadSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, required: true },
+  whatsapp: { type: String, default: '' },
   position: { type: String, default: '' },
   folder: { type: String, default: '' },
   source: { type: String, default: 'Manual' },
@@ -80,7 +81,8 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
     const { 
       name, 
       email, 
-      phone, 
+      phone,
+      whatsapp = '', 
       source = 'strategy_call_modal',
       position = 'Data Analytics & Gen AI' 
     } = req.body;
@@ -100,6 +102,7 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
+      whatsapp: whatsapp.trim(),
       type: 'strategy_call',
       status: 'new',
       subject: 'Strategy Call Booking',
@@ -117,6 +120,7 @@ export const submitStrategyCall = async (req: Request, res: Response): Promise<v
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
+        whatsapp: whatsapp.trim(),
         position: position,
         folder: 'website',      // Hardcoded
         source: source,
