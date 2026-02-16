@@ -149,7 +149,7 @@ export default function MentorProfiles() {
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* --- Header --- */}
-        <div className="text-center mb-16 max-w-3xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}

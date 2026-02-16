@@ -109,7 +109,7 @@ export default function AdvantageStats() {
   }
 
   return (
-    <section className="relative py-24 px-6 bg-zinc-950 overflow-hidden">
+    <section className="relative py-12 px-6 bg-zinc-950 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[100px]" />
@@ -117,7 +117,7 @@ export default function AdvantageStats() {
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16 max-w-3xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}

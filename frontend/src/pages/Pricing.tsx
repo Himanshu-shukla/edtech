@@ -134,10 +134,10 @@ export default function PricingPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-orange-500/30">
       <Navbar />
       
-      <main className="pt-20">
+      <main >
         
         {/* --- HERO SECTION --- */}
-        <section className="relative py-20 md:py-32 overflow-hidden">
+        <section className="relative md:py-12 overflow-hidden">
           {/* Backgrounds */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -149,8 +149,8 @@ export default function PricingPage() {
               transition={{ duration: 0.6 }}
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-medium text-orange-400 mb-8">
-                <Sparkles className="w-3 h-3" />
-                <span>PROGRAM PRICING</span>
+                {/* <Sparkles className="w-3 h-3" />
+                <span>PROGRAM PRICING</span> */}
               </div>
               
               <div className="mb-8 flex justify-center transform hover:scale-105 transition-transform duration-300">
@@ -185,7 +185,7 @@ export default function PricingPage() {
         </section>
 
         {/* --- PRICING SECTION --- */}
-        <section className="relative py-12 md:py-20">
+        <section className="relative ">
           <div className="mx-auto max-w-7xl px-6">
             
             {/* Toggle Switch */}
@@ -326,13 +326,13 @@ export default function PricingPage() {
             </div>
 
             {/* Guarantee Box */}
-            <div className="mt-20 flex justify-center">
+            <div className="mt-20 mb-8 flex justify-center">
               <div className="max-w-2xl w-full p-1 rounded-3xl bg-gradient-to-r from-zinc-800 to-zinc-900">
                 <div className="bg-zinc-950 rounded-[22px] p-8 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
                   <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <ShieldCheck className="w-8 h-8 text-emerald-500" />
                   </div>
-                  <div>
+                  <div >
                     <h3 className="text-lg font-bold text-white mb-2">30-Day Money-Back Guarantee</h3>
                     <p className="text-zinc-400 text-sm">
                       We're confident you'll love our programs. If you're not completely satisfied within 30 days, we'll refund your money, no questions asked.
@@ -346,9 +346,9 @@ export default function PricingPage() {
         </section>
 
         {/* --- COMPARISON TABLE --- */}
-        <section className="py-20 bg-zinc-900/30 border-y border-white/5">
+        <section className="py-8 bg-zinc-900/30 border-y border-white/5">
           <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Why Choose <span className="text-emerald-400">EdTech?</span>
               </h2>
@@ -406,7 +406,7 @@ export default function PricingPage() {
         </section>
 
         {/* --- FAQ SECTION --- */}
-        <section className="py-20 md:py-32">
+        <section className="py-12 md:py-12">
           <div className="mx-auto max-w-3xl px-6">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-medium text-blue-400 mb-6">
@@ -444,7 +444,7 @@ export default function PricingPage() {
         </section>
 
         {/* --- CTA --- */}
-        <section className="py-24 relative overflow-hidden">
+        <section className="py-16 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-zinc-950 to-orange-900/20" />
           
           <div className="relative mx-auto max-w-4xl px-6 text-center">

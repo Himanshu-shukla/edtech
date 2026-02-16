@@ -147,7 +147,7 @@ export default function AboutPage() {
         <GridPattern />
 
         {/* --- HERO SECTION --- */}
-        <section className="relative py-20 md:py-32 text-center px-6">
+        <section className="relative py-12 md:py-12 text-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -243,7 +243,7 @@ export default function AboutPage() {
         </section>
 
         {/* --- TIMELINE SECTION --- */}
-        <section ref={timelineRef} className="py-32 relative overflow-hidden">
+        <section ref={timelineRef} className="relative overflow-hidden">
           <SectionHeader
             badge="MILESTONES"
             title="Our Journey"
@@ -306,7 +306,7 @@ export default function AboutPage() {
         <AdvantageStats />
 
         {/* --- CTA SECTION --- */}
-        <section className="py-24 relative overflow-hidden">
+        <section className="py-12 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 to-zinc-900" />
           
           <motion.div 

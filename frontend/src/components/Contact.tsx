@@ -116,7 +116,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-orange-500/30">
       <Navbar />
       
-      <main className="pt-20">
+      <main>
         
         {/* --- HERO SECTION --- */}
         <section className="relative py-20 md:py-32 overflow-hidden">

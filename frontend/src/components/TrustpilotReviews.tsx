@@ -228,7 +228,7 @@ export default function TrustpilotReviews() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-12 text-center"
+          className="text-center"
         >
           <a
             href="https://www.trustpilot.com/review/edtechinformative.uk"

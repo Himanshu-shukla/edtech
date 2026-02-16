@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   MessageCircle, Clock, Star, Sparkles, ArrowDown, 
   MapPin, Phone, Mail, Send, User, MessageSquare, 
-  Loader2, CheckCircle2, AlertCircle 
+  Loader2, CheckCircle2, AlertCircle, Globe
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -123,7 +123,7 @@ export default function Contact() {
     <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-orange-500/30">
       <Navbar />
       
-      <main className="pt-20">
+      <main>
         
         {/* --- HERO SECTION --- */}
         <section className="relative py-20 md:py-32 overflow-hidden">
@@ -220,18 +220,26 @@ export default function Contact() {
                   {/* Office Cards */}
                   <div className="group p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800 backdrop-blur-sm hover:bg-zinc-900/60 transition-all duration-300">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500/10 transition-all">
+                      <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500/10 transition-all shrink-0">
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div className="flex-1 space-y-2">
                         <div className="text-lg font-bold text-white">Main Headquarters</div>
-                        <p className="text-zinc-400 text-sm">123 Tech Boulevard, Silicon Valley, CA 94025</p>
-                        <div className="flex flex-wrap gap-4 pt-2 text-sm">
-                          <a href="mailto:support@edtech.com" className="flex items-center gap-2 text-zinc-300 hover:text-emerald-400 transition-colors">
-                            <Mail className="w-4 h-4" /> support@edtech.com
+                        <p className="text-zinc-400 text-sm leading-relaxed">
+                          182-184 High Street North East Ham, <br />
+                          E6 2JA, London, United Kingdom
+                        </p>
+                        
+                        {/* Contact Links */}
+                        <div className="flex flex-col gap-3 pt-3 text-sm">
+                          <a href="mailto:support@edtechinformative.uk" className="flex items-center gap-3 text-zinc-300 hover:text-emerald-400 transition-colors">
+                            <Mail className="w-4 h-4 text-zinc-500" /> support@edtechinformative.uk
                           </a>
-                          <a href="tel:+1234567890" className="flex items-center gap-2 text-zinc-300 hover:text-emerald-400 transition-colors">
-                            <Phone className="w-4 h-4" /> +1 (234) 567-890
+                          <a href="tel:+447520637856" className="flex items-center gap-3 text-zinc-300 hover:text-emerald-400 transition-colors">
+                            <Phone className="w-4 h-4 text-zinc-500" /> +44 7520 637856
+                          </a>
+                          <a href="https://edtechinformative.uk" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-zinc-300 hover:text-emerald-400 transition-colors">
+                            <Globe className="w-4 h-4 text-zinc-500" /> edtechinformative.uk
                           </a>
                         </div>
                       </div>
@@ -243,7 +251,7 @@ export default function Contact() {
                     <iframe
                       title="Office Location"
                       className="w-full h-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.639290621062!2d-122.08374688469227!3d37.42199997982564!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba02425dad8f%3A0x6c296c66619367e0!2sGoogleplex!5e0!3m2!1sen!2sus!4v1611819809075!5m2!1sen!2sus"
+                      src="https://maps.google.uk/maps?q=182-184%20High%20Street%20North%20East%20Ham,%20E6%202JA,%20London,%20United%20Kingdom&t=&z=13&ie=UTF8&iwloc=&output=embed"
                       loading="lazy"
                       allowFullScreen
                     />
