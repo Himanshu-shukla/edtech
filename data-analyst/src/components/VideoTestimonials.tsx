@@ -184,7 +184,7 @@ export default function VideoTestimonials() {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <section className="py-4 bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div

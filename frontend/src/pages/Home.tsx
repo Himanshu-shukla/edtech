@@ -89,7 +89,7 @@ export default function HomePage() {
         {/* --- Lazy Loaded Sections with Reveal Effects --- */}
         
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="py-20">
+          <SectionReveal className="py-8">
             <CoursesSection />
           </SectionReveal>
         </Suspense>
@@ -103,7 +103,7 @@ export default function HomePage() {
         </Suspense>
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="pb-10">
+          <SectionReveal className="pb-12">
             <CompanyShowcase />
           </SectionReveal>
         </Suspense>
@@ -111,19 +111,19 @@ export default function HomePage() {
         {/* Grouping Testimonials for better flow */}
         <div className="bg-gradient-to-b from-zinc-950 to-zinc-900/80">
           <Suspense fallback={<SectionLoader />}>
-            <SectionReveal className="pt-20">
+            <SectionReveal className="pt-6">
               <Testimonials />
             </SectionReveal>
           </Suspense>
 
           <Suspense fallback={<SectionLoader />}>
-            <SectionReveal className="py-16">
+            <SectionReveal >
               <VideoTestimonials />
             </SectionReveal>
           </Suspense>
 
           <Suspense fallback={<SectionLoader />}>
-            <SectionReveal className="pb-20">
+            <SectionReveal>
               <TrustpilotReviews />
             </SectionReveal>
           </Suspense>
@@ -132,7 +132,7 @@ export default function HomePage() {
         <Divider />
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="py-20 relative overflow-hidden">
+          <SectionReveal className="relative overflow-hidden">
             {/* Optional local background blob for this section */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-zinc-800/20 rounded-full blur-3xl pointer-events-none" />
             <CertificateSection onApplyNow={handleApplyNow} />
@@ -140,18 +140,18 @@ export default function HomePage() {
         </Suspense>
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="py-20 bg-zinc-900/50">
+          <SectionReveal className="bg-zinc-900/50">
             <WhyChooseUs />
           </SectionReveal>
         </Suspense>
 
         <Suspense fallback={<SectionLoader />}>
-          <SectionReveal className="py-20">
+          <SectionReveal >
             <FAQ />
           </SectionReveal>
         </Suspense>
 
-        <Suspense fallback={<div className="h-20" />}>
+        <Suspense fallback={<div />}>
           <Footer />
         </Suspense>
 

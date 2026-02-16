@@ -107,7 +107,7 @@ export default function CoursesSection() {
   return (
     <section
       id="featured-programs"
-      className="relative py-20 overflow-hidden"
+      className="relative overflow-hidden"
     >
       {/* Glow Background */}
       <div className="absolute -left-64 top-1/4 w-96 h-96 bg-emerald-500/10 blur-[120px]" />

@@ -6,9 +6,9 @@ export default function TermsOfService() {
     <div className="min-h-screen">
       <Navbar />
       
-      <main className="pt-20">
+      <main className="">
         {/* Hero Section */}
-        <section className="py-16 md:py-24 relative overflow-hidden">
+        <section className="md:py-24 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-edtech-blue via-bg-deep to-edtech-blue/90" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
           

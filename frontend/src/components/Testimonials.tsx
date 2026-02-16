@@ -85,7 +85,7 @@ export default function Testimonials() {
   }, []);
 
   return (
-    <section className="relative py-24 bg-zinc-950">
+    <section className="relative bg-zinc-950">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-20">
