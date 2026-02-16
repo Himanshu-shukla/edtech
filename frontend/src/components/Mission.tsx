@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, ArrowDown } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -191,14 +191,7 @@ export default function Mission() {
             From <span className="text-white font-medium">personalized feedback</span> to <span className="text-white font-medium">expert mentorship</span> and industry-recognized certifications — we're committed to your success.
           </motion.p>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 flex justify-center"
-          >
-            <ArrowDown className="w-6 h-6 text-zinc-600 animate-bounce" />
-          </motion.div>
+         
         </div>
 
         {/* --- Stacking Cards Container --- */}

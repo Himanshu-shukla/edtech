@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  MessageCircle, Clock, Star, Sparkles, ArrowDown, 
+  MessageCircle, Clock, Star, Sparkles, 
   MapPin, Phone, Mail, Send, User, MessageSquare, 
   Loader2, CheckCircle2, AlertCircle, Globe
 } from "lucide-react";
@@ -187,8 +187,6 @@ export default function Contact() {
                 </motion.div>
               ))}
             </div>
-
-           
 
           </div>
         </section>
