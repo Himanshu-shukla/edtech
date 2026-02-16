@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Check, X, ChevronDown, CreditCard, Calendar, 
-  Sparkles, ShieldCheck, Zap, HelpCircle, ArrowRight 
+  ShieldCheck, Zap, HelpCircle, ArrowRight 
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
