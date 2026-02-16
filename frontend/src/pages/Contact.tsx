@@ -188,17 +188,7 @@ export default function Contact() {
               ))}
             </div>
 
-            {/* Visual Arrow indicating scroll to form */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 1 }}
-              className="mt-16 flex justify-center"
-            >
-              <div className="p-2 rounded-full border border-zinc-800 bg-zinc-900/50 text-zinc-500 animate-bounce">
-                <ArrowDown className="w-5 h-5" />
-              </div>
-            </motion.div>
+           
 
           </div>
         </section>
