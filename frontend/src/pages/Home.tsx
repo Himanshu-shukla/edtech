@@ -66,7 +66,7 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-200 selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden">
-      
+
       {/* --- Global Background Effects --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {/* Subtle Grid */}
@@ -78,16 +78,16 @@ export default function HomePage() {
 
       {/* --- Main Content (z-10 to sit above background) --- */}
       <div className="relative z-10 flex flex-col gap-0">
-        
+
         <Navbar />
-        
+
         <Hero onApplyNow={handleApplyNow} />
-        
+
         {/* UpcomingSkills often looks best seamlessly attached to Hero, so no reveal/lazy needed if it's light */}
         <UpcomingSkills />
 
         {/* --- Lazy Loaded Sections with Reveal Effects --- */}
-        
+
         <Suspense fallback={<SectionLoader />}>
           <SectionReveal className="py-8">
             <CoursesSection />
